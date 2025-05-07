@@ -30,7 +30,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "1.0"
+        self.bot_version = "V1.0"
         self.author = "Chad Qin"
 
     def _setup_logging(self):
@@ -306,28 +306,144 @@ class StableMusicBot:
         @self.bot.command(name='help')
         async def help_cmd(msg: Message):
             await msg.reply(
-                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/Precrafts:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接"
+                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接"
             )
+
+        wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'
+        price_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/4/4a/065002.png'
+        sim_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/b/b9/061543.png'
+        hq_helper_img_src ='https://raw.githubusercontent.com/InfSein/hqhelper-dawntrail/master/public/icons/logo_v2_shadowed.png'
+        act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/ffcafe.png'
 
         @self.bot.command(name='wiki')
         async def wiki_cmd(msg: Message):
-            await msg.reply('https://ff14.huijiwiki.com/wiki/首页?veaction=edit')
+            url = 'https://ff14.huijiwiki.com/wiki/首页?veaction=edit'
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=url, type=Types.Text.KMD)
+                ),
+                Module.Divider(),
+                Module.Section(
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    accessory=Element.Button(
+                        text="跳转",
+                        value=url,
+                        click=Types.Click.LINK,
+                        theme=Types.Theme.PRIMARY
+                    ),
+                    mode=Types.SectionMode.RIGHT
+                ),
+                Module.Section(
+                    accessory=Element.Image(src=wiki_image_src, size=Types.Size.SM),
+                    mode=Types.SectionMode.RIGHT
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
 
         @self.bot.command(name='price')
         async def price_cmd(msg: Message):
-            await msg.reply('https://www.ff14pvp.top/#/')
+            url = 'https://www.ff14pvp.top/#/'
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=url, type=Types.Text.KMD)
+                ),
+                Module.Divider(),
+                Module.Section(
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    accessory=Element.Button(
+                        text="跳转",
+                        value=url,
+                        click=Types.Click.LINK,
+                        theme=Types.Theme.PRIMARY
+                    ),
+                    mode=Types.SectionMode.RIGHT
+                ),
+                Module.Section(
+                    accessory=Element.Image(src=price_image_src, size=Types.Size.SM),
+                    mode=Types.SectionMode.RIGHT
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
 
         @self.bot.command(name='sim')
         async def sim_cmd(msg: Message):
-            await msg.reply('https://tnze.yyyy.games/#/welcome')
+            url = 'https://tnze.yyyy.games/#/welcome'
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=url, type=Types.Text.KMD)
+                ),
+                Module.Divider(),
+                Module.Section(
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    accessory=Element.Button(
+                        text="跳转",
+                        value=url,
+                        click=Types.Click.LINK,
+                        theme=Types.Theme.PRIMARY
+                    ),
+                    mode=Types.SectionMode.RIGHT
+                ),
+                Module.Section(
+                    accessory=Element.Image(src=sim_image_src, size=Types.Size.SM),
+                    mode=Types.SectionMode.RIGHT
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
 
-        @self.bot.command(name='precrafts')
+        @self.bot.command(name='hq_helper')
         async def precrafts_cmd(msg: Message):
-            await msg.reply('https://hqhelper.nbb.fan/#/')
+            url = 'https://hqhelper.nbb.fan/#/'
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=url, type=Types.Text.KMD)
+                ),
+                Module.Divider(),
+                Module.Section(
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    accessory=Element.Button(
+                        text="跳转",
+                        value=url,
+                        click=Types.Click.LINK,
+                        theme=Types.Theme.PRIMARY
+                    ),
+                    mode=Types.SectionMode.RIGHT
+                ),
+                Module.Section(
+                    accessory=Element.Image(src=hq_helper_img_src, size=Types.Size.SM),
+                    mode=Types.SectionMode.RIGHT
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
 
         @self.bot.command(name='act_cafe')
         async def act_cafe_cmd(msg: Message):
-            await msg.reply('https://www.ffcafe.cn/act/')
+            url = 'https://www.ffcafe.cn/act/'
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=url, type=Types.Text.KMD)
+                ),
+                Module.Divider(),
+                Module.Section(
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    accessory=Element.Button(
+                        text="跳转",
+                        value=url,
+                        click=Types.Click.LINK,
+                        theme=Types.Theme.PRIMARY
+                    ),
+                    mode=Types.SectionMode.RIGHT
+                ),
+                Module.Section(
+                    accessory=Element.Image(src=act_cafe_img_src, size=Types.Size.SM),
+                    mode=Types.SectionMode.RIGHT
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
 
         @self.bot.command(name='act_diemoe')
         async def act_diemoe_cmd(msg: Message):
@@ -346,11 +462,30 @@ class StableMusicBot:
             # 添加分隔线
             card.append(Module.Divider())
             # 添加机器人版本信息
-            card.append(Module.Section(Element.Text(content=f"**机器人版本：** {self.bot_version}", type=Types.Text.KMD)))
+            card.append(
+                Module.Section(Element.Text(content=f"**机器人版本：** {self.bot_version}", type=Types.Text.KMD)))
             # 添加分隔线
             card.append(Module.Divider())
             # 添加作者信息
             card.append(Module.Section(Element.Text(content=f"**作者：** {self.author}", type=Types.Text.KMD)))
+            # 添加分隔线（新增内容分隔）
+            card.append(Module.Divider())
+            # 新增 GitHub 地址模块（左边显示完整地址 + 右边按钮）
+            github_url = "https://github.com/ChadQin/KOOK_BOT"  # GitHub 仓库地址
+            card.append(Module.Section(
+                # 左边：显示完整 GitHub 地址（KMD 格式支持超链接）
+                Element.Text(
+                    content=f"**GitHub 地址：** (ins){github_url}(ins)",  # 直接显示纯文本地址（或使用 KMD 超链接）
+                    type=Types.Text.KMD  # 使用 KMD 格式（支持加粗、超链接等）
+                ),
+                # 右边：绿色按钮（点击打开链接，核心修正点：使用 `value` 而非 `href`）
+                Element.Button(
+                    text="查看仓库",  # 按钮显示文本
+                    click=Types.Click.LINK,  # 按钮类型为链接（必填）
+                    value=github_url,  # 按钮跳转地址（原 `href` 错误，应改为 `value`）
+                    theme=Types.Theme.SUCCESS,  # 绿色主题
+                )
+            ))
 
             card_msg = CardMessage(card)
             await msg.reply(card_msg)

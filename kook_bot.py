@@ -9,9 +9,9 @@ import subprocess
 from khl import Bot, Message, PublicVoiceChannel
 from khl.card import Card, CardMessage, Module, Element, Types
 from khl.card.color import Color
-
 from typing import Dict, Optional, Union
 
+"""Update Time: 2025/05/07"""
 
 class StableMusicBot:
     def __init__(self, token: str):

@@ -1,0 +1,59 @@
+2025-05-07 14:42:36.787 [ERROR] asyncio: Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x0674C748>
+source_traceback: Object created at (most recent call last):
+  File "F:\Python_project\kook_bot_project\kook_bot.py", line 385, in <module>
+    asyncio.run(main(), debug=True)
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\base_events.py", line 629, in run_until_complete
+    self.run_forever()
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\base_events.py", line 596, in run_forever
+    self._run_once()
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\base_events.py", line 1882, in _run_once
+    handle._run()
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "F:\Python_project\.venv\lib\site-packages\khl\client.py", line 64, in handle_pkg
+    await self._consume_pkg(pkg)
+  File "F:\Python_project\.venv\lib\site-packages\khl\client.py", line 78, in _consume_pkg
+    if msg.author.id == (await self.fetch_me()).id:
+  File "F:\Python_project\.venv\lib\site-packages\khl\client.py", line 131, in fetch_me
+    self._me = User(_gate_=self.gate, _lazy_loaded_=True, **(await self.gate.exec_req(api.User.me())))
+  File "F:\Python_project\.venv\lib\site-packages\khl\gateway.py", line 30, in exec_req
+    return await self.requester.exec_req(r)
+  File "F:\Python_project\.venv\lib\site-packages\khl\requester.py", line 58, in exec_req
+    return await self.request(r.method, r.route, **r.params)
+  File "F:\Python_project\.venv\lib\site-packages\khl\requester.py", line 40, in request
+    self._cs = ClientSession()
+2025-05-07 14:42:36.787 [ERROR] asyncio: Unclosed connector
+connections: ['deque([(<aiohttp.client_proto.ResponseHandler object at 0x06AC00E8>, 82791.703)])']
+connector: <aiohttp.connector.TCPConnector object at 0x06780F40>
+source_traceback: Object created at (most recent call last):
+  File "F:\Python_project\kook_bot_project\kook_bot.py", line 385, in <module>
+    asyncio.run(main(), debug=True)
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\base_events.py", line 629, in run_until_complete
+    self.run_forever()
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\base_events.py", line 596, in run_forever
+    self._run_once()
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\base_events.py", line 1882, in _run_once
+    handle._run()
+  File "C:\Program Files (x86)\Python39-32\lib\asyncio\events.py", line 80, in _run
+    self._context.run(self._callback, *self._args)
+  File "F:\Python_project\.venv\lib\site-packages\khl\client.py", line 64, in handle_pkg
+    await self._consume_pkg(pkg)
+  File "F:\Python_project\.venv\lib\site-packages\khl\client.py", line 78, in _consume_pkg
+    if msg.author.id == (await self.fetch_me()).id:
+  File "F:\Python_project\.venv\lib\site-packages\khl\client.py", line 131, in fetch_me
+    self._me = User(_gate_=self.gate, _lazy_loaded_=True, **(await self.gate.exec_req(api.User.me())))
+  File "F:\Python_project\.venv\lib\site-packages\khl\gateway.py", line 30, in exec_req
+    return await self.requester.exec_req(r)
+  File "F:\Python_project\.venv\lib\site-packages\khl\requester.py", line 58, in exec_req
+    return await self.request(r.method, r.route, **r.params)
+  File "F:\Python_project\.venv\lib\site-packages\khl\requester.py", line 40, in request
+    self._cs = ClientSession()
+  File "F:\Python_project\.venv\lib\site-packages\aiohttp\client.py", line 359, in __init__
+    connector = TCPConnector(loop=loop)
+  File "F:\Python_project\.venv\lib\site-packages\aiohttp\connector.py", line 857, in __init__
+    super().__init__(

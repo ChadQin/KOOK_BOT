@@ -313,7 +313,8 @@ class StableMusicBot:
         price_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/4/4a/065002.png'
         sim_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/b/b9/061543.png'
         hq_helper_img_src ='https://raw.githubusercontent.com/InfSein/hqhelper-dawntrail/master/public/icons/logo_v2_shadowed.png'
-        act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/ffcafe.png'
+        act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/334.png'
+        act_diemoe_imsg_src = 'https://act.diemoe.net/assets/img/logo.png'
 
         @self.bot.command(name='wiki')
         async def wiki_cmd(msg: Message):
@@ -447,7 +448,29 @@ class StableMusicBot:
 
         @self.bot.command(name='act_diemoe')
         async def act_diemoe_cmd(msg: Message):
-            await msg.reply('https://act.diemoe.net/')
+            url = 'https://act.diemoe.net/'
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=url, type=Types.Text.KMD)
+                ),
+                Module.Divider(),
+                Module.Section(
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    accessory=Element.Button(
+                        text="跳转",
+                        value=url,
+                        click=Types.Click.LINK,
+                        theme=Types.Theme.PRIMARY
+                    ),
+                    mode=Types.SectionMode.RIGHT
+                ),
+                Module.Section(
+                    accessory=Element.Image(src=act_diemoe_imsg_src, size=Types.Size.SM),
+                    mode=Types.SectionMode.RIGHT
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
 
         @self.bot.command(name='idn')
         async def idn_cmd(msg: Message):

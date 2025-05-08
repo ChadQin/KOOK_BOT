@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 import aiohttp
 import logging
 import subprocess
-from khl import Bot, Message, PublicVoiceChannel
+import random
+import datetime
+from khl import Bot, Message
 from khl.card import Card, CardMessage, Module, Element, Types
 from khl.card.color import Color
 from typing import Dict, Optional, Union
 
-"""Update Time: 2025/05/07"""
+"""Update Time: 2025/05/08"""
 
 class StableMusicBot:
     def __init__(self, token: str):
@@ -32,6 +34,7 @@ class StableMusicBot:
         self.bot_name = "Chad Bot"
         self.bot_version = "V1.0"
         self.author = "Chad Qin"
+        self.roll_info = {}  # 初始化 roll_info 属性
 
     def _setup_logging(self):
         logging.basicConfig(
@@ -306,13 +309,13 @@ class StableMusicBot:
         @self.bot.command(name='help')
         async def help_cmd(msg: Message):
             await msg.reply(
-                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接"
+                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）"
             )
 
         wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'
         price_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/4/4a/065002.png'
         sim_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/b/b9/061543.png'
-        hq_helper_img_src ='https://raw.githubusercontent.com/InfSein/hqhelper-dawntrail/master/public/icons/logo_v2_shadowed.png'
+        hq_helper_img_src = 'https://raw.githubusercontent.com/InfSein/hqhelper-dawntrail/master/public/icons/logo_v2_shadowed.png'
         act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/334.png'
         act_diemoe_imsg_src = 'https://act.diemoe.net/assets/img/logo.png'
 
@@ -325,7 +328,7 @@ class StableMusicBot:
                 ),
                 Module.Divider(),
                 Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
                     accessory=Element.Button(
                         text="跳转",
                         value=url,
@@ -351,7 +354,7 @@ class StableMusicBot:
                 ),
                 Module.Divider(),
                 Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
                     accessory=Element.Button(
                         text="跳转",
                         value=url,
@@ -377,7 +380,7 @@ class StableMusicBot:
                 ),
                 Module.Divider(),
                 Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
                     accessory=Element.Button(
                         text="跳转",
                         value=url,
@@ -403,7 +406,7 @@ class StableMusicBot:
                 ),
                 Module.Divider(),
                 Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
                     accessory=Element.Button(
                         text="跳转",
                         value=url,
@@ -429,7 +432,7 @@ class StableMusicBot:
                 ),
                 Module.Divider(),
                 Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
                     accessory=Element.Button(
                         text="跳转",
                         value=url,
@@ -455,7 +458,7 @@ class StableMusicBot:
                 ),
                 Module.Divider(),
                 Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),  # 这里可以放一些提示文本
+                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
                     accessory=Element.Button(
                         text="跳转",
                         value=url,
@@ -498,20 +501,42 @@ class StableMusicBot:
             card.append(Module.Section(
                 # 左边：显示完整 GitHub 地址（KMD 格式支持超链接）
                 Element.Text(
-                    content=f"**GitHub 地址：** (ins){github_url}(ins)",  # 直接显示纯文本地址（或使用 KMD 超链接）
-                    type=Types.Text.KMD  # 使用 KMD 格式（支持加粗、超链接等）
+                    content=f"**GitHub 地址：** (ins){github_url}(ins)",
+                    type=Types.Text.KMD
                 ),
                 # 右边：绿色按钮（点击打开链接，核心修正点：使用 `value` 而非 `href`）
                 Element.Button(
-                    text="查看仓库",  # 按钮显示文本
-                    click=Types.Click.LINK,  # 按钮类型为链接（必填）
-                    value=github_url,  # 按钮跳转地址（原 `href` 错误，应改为 `value`）
-                    theme=Types.Theme.SUCCESS,  # 绿色主题
+                    text="查看仓库",
+                    click=Types.Click.LINK,
+                    value=github_url,
+                    theme=Types.Theme.SUCCESS
                 )
             ))
 
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
+
+        @self.bot.command(name='roll')
+        async def roll_cmd(msg: Message):
+            random_num = random.randint(1, 999)
+            channel_id = msg.channel.id
+            user_id = msg.author.id
+            if channel_id not in self.roll_info:
+                self.roll_info[channel_id] = {
+                    'end_time': datetime.datetime.now() + datetime.timedelta(minutes=5),
+                    'results': {},
+                    'total_people': 0
+                }
+            self.roll_info[channel_id]['results'][user_id] = random_num
+            self.roll_info[channel_id]['total_people'] += 1
+            card = Card(
+                Module.Section(
+                    text=Element.Text(content=f"你掷出了: **(font){random_num}(font)[pink]**", type=Types.Text.KMD)
+                )
+            )
+            card_msg = CardMessage(card)
+            await msg.reply(card_msg)
+
 
     async def cleanup(self):
         if self._http and not self._http.closed:
@@ -524,7 +549,7 @@ async def main():
     load_dotenv()
     kook_token = os.getenv("KOOK_TOKEN")
     print(kook_token)
-    print(f"Loaded KOOK_TOKEN: {kook_token}")  # 添加调试信息
+    print(f"Loaded KOOK_TOKEN: {kook_token}")
     if not kook_token:
         raise ValueError("KOOK_TOKEN not found in .env file")
     bot = StableMusicBot(kook_token)

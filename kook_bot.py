@@ -32,7 +32,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.0"
+        self.bot_version = "V1.1"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
 

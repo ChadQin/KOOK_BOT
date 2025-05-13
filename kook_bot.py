@@ -12,8 +12,10 @@ from khl import Bot, Message
 from khl.card import Card, CardMessage, Module, Element, Types
 from khl.card.color import Color
 from typing import Dict, Optional, Union
+from HLTV_PLAYER import HLTVPlayerManager
 
-"""Update Time: 2025/05/08"""
+"""Update Time: 2025/05/13"""
+
 
 class StableMusicBot:
     def __init__(self, token: str):
@@ -32,9 +34,11 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.1"
+        self.bot_version = "V1.2"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
+        self.player_manager = HLTVPlayerManager(r"F:\Python_project\kook_bot_project\data\HLTV_Player.xlsx")
+        self.guessed_player = None  # 新增：用于存储随机抽取的选手信息
 
     def _setup_logging(self):
         logging.basicConfig(
@@ -290,26 +294,70 @@ class StableMusicBot:
             await msg.reply(f"离开语音频道失败: {str(e)}")
 
     def _register_handlers(self):
-        @self.bot.command(name='play')
+        # 新增：指令前缀处理函数，使所有指令变为大小写不敏感
+        async def handle_case_insensitive_commands(msg: Message):
+            content = msg.content.strip()
+            if not content.startswith('/'):
+                return
+
+            # 分割指令和参数
+            parts = content[1:].split(' ', 1)
+            command = parts[0].lower()
+            args = parts[1] if len(parts) > 1 else ''
+
+            # 根据指令调用对应的处理函数
+            if command == 'play':
+                await play_cmd(msg, args)
+            elif command == 'come':
+                await come_cmd(msg)
+            elif command == 'leave':
+                await leave_cmd(msg)
+            elif command == 'help':
+                await help_cmd(msg)
+            elif command == 'wiki':
+                await wiki_cmd(msg)
+            elif command == 'price':
+                await price_cmd(msg)
+            elif command == 'sim':
+                await sim_cmd(msg)
+            elif command == 'hq_helper':
+                await precrafts_cmd(msg)
+            elif command == 'act_cafe':
+                await act_cafe_cmd(msg)
+            elif command == 'act_diemoe':
+                await act_diemoe_cmd(msg)
+            elif command == 'idn':
+                await idn_cmd(msg)
+            elif command == 'roll':
+                await roll_cmd(msg)
+            elif command == 'id':
+                await id_cmd(msg)
+            elif command == 'guess':
+                await guess_cmd(msg)
+            elif command == 'result':
+                await result_cmd(msg)
+
+        # 注册通用消息处理函数
+        @self.bot.on_message()
+        async def handle_all_messages(msg: Message):
+            await handle_case_insensitive_commands(msg)
+
+        # 保留原有的指令处理函数，但不再通过装饰器注册
         async def play_cmd(msg: Message, query: str):
             self.logger.info(f"接收到 /play 指令，参数: {query}")
             time.sleep(0.5)
             await self._safe_play(msg, query)
 
-        @self.bot.command(name='come')
         async def come_cmd(msg: Message):
             self.logger.info(f"接收到 /come 指令")
-            # 保留原come指令以备未来可能的独立使用
             await self._join_user_voice_channel(msg)
 
-        @self.bot.command(name='leave')
         async def leave_cmd(msg: Message):
             await self._leave_voice_channel(msg)
 
-        @self.bot.command(name='help')
         async def help_cmd(msg: Message):
             await msg.reply(
-                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）"
+                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t猜测指令\n/RESULT:\t结果指令"
             )
 
         wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'
@@ -319,7 +367,6 @@ class StableMusicBot:
         act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/334.png'
         act_diemoe_imsg_src = 'https://act.diemoe.net/assets/img/logo.png'
 
-        @self.bot.command(name='wiki')
         async def wiki_cmd(msg: Message):
             url = 'https://ff14.huijiwiki.com/wiki/首页?veaction=edit'
             card = Card(
@@ -345,7 +392,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='price')
         async def price_cmd(msg: Message):
             url = 'https://www.ff14pvp.top/#/'
             card = Card(
@@ -371,7 +417,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='sim')
         async def sim_cmd(msg: Message):
             url = 'https://tnze.yyyy.games/#/welcome'
             card = Card(
@@ -397,7 +442,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='hq_helper')
         async def precrafts_cmd(msg: Message):
             url = 'https://hqhelper.nbb.fan/#/'
             card = Card(
@@ -423,7 +467,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='act_cafe')
         async def act_cafe_cmd(msg: Message):
             url = 'https://www.ffcafe.cn/act/'
             card = Card(
@@ -449,7 +492,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='act_diemoe')
         async def act_diemoe_cmd(msg: Message):
             url = 'https://act.diemoe.net/'
             card = Card(
@@ -475,7 +517,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='idn')
         async def idn_cmd(msg: Message):
             # 创建卡片，设置颜色和主题
             card = Card(theme=Types.Theme.PRIMARY, size=Types.Size.LG, color=Color(hex_color='#007BFF'))
@@ -516,7 +557,6 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
-        @self.bot.command(name='roll')
         async def roll_cmd(msg: Message):
             random_num = random.randint(1, 999)
             channel_id = msg.channel.id
@@ -537,6 +577,46 @@ class StableMusicBot:
             card_msg = CardMessage(card)
             await msg.reply(card_msg)
 
+        async def id_cmd(msg: Message):
+            sorted_names, player_count = self.player_manager.get_sorted_player_names()
+            if player_count > 0:
+                player_list = "\n".join(sorted_names)
+                reply_msg = f"选手名单（共 {player_count} 人）：\n{player_list}"
+            else:
+                reply_msg = "未找到选手数据。"
+            await msg.reply(reply_msg)
+
+        async def guess_cmd(msg: Message):
+            sorted_names, player_count = self.player_manager.get_sorted_player_names()
+            if player_count > 0:
+                self.guessed_player = random.choice(sorted_names)
+                await msg.reply("已抽取一名选手，输入 /RESULT 查看结果。")
+            else:
+                await msg.reply("未找到选手数据。")
+
+        async def result_cmd(msg: Message):
+            if self.guessed_player:
+                player_info = self.player_manager.get_player_info(self.guessed_player)
+                if player_info.startswith("未找到") or player_info.startswith("数据加载失败"):
+                    await msg.reply(player_info)
+                else:
+                    # 直接使用固定列头，不再进行拆分操作
+                    fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
+                    # 获取选手数据
+                    data = player_info.split('\n')[1]
+                    data_items = data.split('\t')
+
+                    reply_text = ""
+                    for i, header in enumerate(fixed_headers):
+                        if i < len(data_items):
+                            # 在冒号两端添加制表符 \t
+                            reply_text += f"- {header} :\t{data_items[i]}\n"
+                        else:
+                            reply_text += f"- {header} :\t\n"
+                    await msg.reply(reply_text)
+                self.guessed_player = None
+            else:
+                await msg.reply("还未进行抽取，请先输入 /GUESS 进行抽取。")
 
     async def cleanup(self):
         if self._http and not self._http.closed:

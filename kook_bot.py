@@ -33,11 +33,10 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.1"
+        self.bot_version = "V1.2.2"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         self.player_manager = HLTVPlayerManager(r"F:\Python_project\kook_bot_project\data\HLTV_Player.xlsx")
-
         # 新增猜测功能状态
         self.correct_player = None  # 正确选手名
         self.guess_attempts = 0  # 剩余猜测次数
@@ -574,6 +573,7 @@ class StableMusicBot:
             return
 
         self.correct_player = random.choice(sorted_names)
+        print(self.correct_player)
         self.guess_attempts = 7
         await msg.reply(f"已抽取一名选手，请猜测他的名字！你有 {self.guess_attempts} 次机会。\n直接发送选手名进行猜测！")
 
@@ -640,28 +640,60 @@ class StableMusicBot:
             if self.guess_attempts > 0:
                 await msg.reply(f"猜测错误！你还有 {self.guess_attempts} 次机会。\n你猜测的选手信息：\n{reply_text}")
             else:
-                # 显示正确答案
-                fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
-                correct_text = ""
-                for i, header in enumerate(fixed_headers):
-                    if i < len(correct_data):
-                        correct_text += f"- {header} :\t{correct_data[i]}✅\n"
-                    else:
-                        correct_text += f"- {header} :\t\n"
-                await msg.reply(f"很遗憾，你的7次机会已用完！正确答案是：\n{correct_text}")
+                await self.send_fail_result(msg, correct_data)  # 新增方法调用
                 self.correct_player = None  # 重置猜测状态
                 self.guess_attempts = 0
 
     async def send_correct_result(self, msg: Message, correct_data):
         fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
-        correct_text = ""
-        for i, header in enumerate(fixed_headers):
-            if i < len(correct_data):
-                # 为所有正确信息添加✅
-                correct_text += f"- {header} :\t{correct_data[i]}✅\n"
-            else:
-                correct_text += f"- {header} :\t\n"
-        await msg.reply(f"恭喜你猜中了！正确答案是：\n{correct_text}")
+        correct_text = "\n".join([f"- {h} :\t{v}✅" for h, v in zip(fixed_headers, correct_data)])
+        self.celebrate_image_path = r'F:\Python_project\kook_bot_project\img\celebrate.png'
+        # 上传庆祝图片
+        try:
+            img_url = await self.bot.client.create_asset(self.celebrate_image_path)
+        except Exception as e:
+            self.logger.error(f"庆祝图片上传失败: {e}")
+            await msg.reply("🎉 猜中啦！不过庆祝图片发送失败，请联系管理员检查路径~")
+            await msg.reply(correct_text)
+            return
+
+        # 创建卡片
+        card = Card(
+            Module.Header("恭喜你猜中了！正确答案是"),
+            Module.Divider(),
+            Module.Container(Element.Image(src=img_url, size=Types.Size.SM))
+        )
+
+        # 发送消息
+        await msg.reply(CardMessage(card))
+        await msg.reply(correct_text)
+
+        self.correct_player = None
+        self.guess_attempts = 0
+
+    async def send_fail_result(self, msg: Message, correct_data):
+        """猜测次数用尽时发送失败图片和正确答案"""
+        fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
+        correct_text = "\n".join([f"- {h} :\t{v}✅" for h, v in zip(fixed_headers, correct_data)])
+        self.fail_image_path = r'F:\Python_project\kook_bot_project\img\sad.png'
+        # 上传失败图片（与其他场景逻辑一致）
+        try:
+            img_url = await self.bot.client.create_asset(self.fail_image_path)
+        except Exception as e:
+            self.logger.error(f"失败图片上传失败: {e}")
+            await msg.reply(f"很遗憾，你的7次机会已用完！\n正确答案是：\n{correct_text}")
+            return
+
+        # 创建失败卡片（结构与猜对卡片一致，仅标题和图片不同）
+        card = Card(
+            Module.Header("很遗憾，你输了！"),  # 失败标题
+            Module.Divider(),  # 分隔线
+            Module.Container(Element.Image(src=img_url, size=Types.Size.SM))  # 小尺寸图片
+        )
+
+        # 发送卡片和文本（与其他场景一致）
+        await msg.reply(CardMessage(card))
+        await msg.reply(f"正确答案是：\n{correct_text}")
 
     async def result_cmd(self, msg: Message):
         if not self.correct_player:
@@ -677,17 +709,31 @@ class StableMusicBot:
 
         correct_data = player_info.split('\n')[1].split('\t')
         fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
-        correct_text = ""
-        for i, header in enumerate(fixed_headers):
-            if i < len(correct_data):
-                correct_text += f"- {header} :\t{correct_data[i]}✅\n"
-            else:
-                correct_text += f"- {header} :\t\n"
+        correct_text = "\n".join([f"- {h} :\t{v}✅" for h, v in zip(fixed_headers, correct_data)])
+        self.taunt_image_path = r"F:\Python_project\kook_bot_project\img\taunt.png"
+        # 上传图片并获取URL
+        try:
+            img_url = await self.bot.client.create_asset(self.taunt_image_path)
+            if not img_url:
+                await msg.reply("❌ 图片上传失败，请检查文件路径")
+                return
+        except Exception as e:
+            self.logger.error(f"图片上传异常: {str(e)}")
+            await msg.reply(f"❌ 图片上传异常: {str(e)}")
+            return
 
-        if self.guess_attempts > 0:
-            await msg.reply(f"小B崽子，猜不出来叭！正确答案是：\n{correct_text}")
-        else:
-            await msg.reply(f"正确答案是：\n{correct_text}")
+        # 创建卡片消息：文本和图片在同一卡片中
+        card = Card(
+            Module.Header("小B崽子，猜不出来叭！"),  # 标题文本
+            Module.Divider(),  # 分隔线
+            Module.Container(Element.Image(src=img_url, size=Types.Size.LG))  # 图片容器
+        )
+
+        # 发送卡片消息
+        await msg.reply(CardMessage(card))
+
+        # 单独发送选手信息（保持纯文本）
+        await msg.reply(correct_text)
 
         self.correct_player = None
         self.guess_attempts = 0

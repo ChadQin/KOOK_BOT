@@ -14,7 +14,7 @@ from khl.card.color import Color
 from typing import Dict, Optional, Union
 from HLTV_PLAYER import HLTVPlayerManager
 
-"""Update Time: 2025/05/13"""
+"""Update Time: 2025/05/14"""
 
 
 class StableMusicBot:
@@ -22,7 +22,6 @@ class StableMusicBot:
         self._setup_logging()
         self._init_event_loop()  # 初始化事件循环
         self.bot_token = token  # 存储令牌作为类属性
-
         self.bot = Bot(token=token)
         self._http = None  # type: Optional[aiohttp.ClientSession]
         self._api_endpoints = [
@@ -34,11 +33,14 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2"
+        self.bot_version = "V1.2.1"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         self.player_manager = HLTVPlayerManager(r"F:\Python_project\kook_bot_project\data\HLTV_Player.xlsx")
-        self.guessed_player = None  # 新增：用于存储随机抽取的选手信息
+
+        # 新增猜测功能状态
+        self.correct_player = None  # 正确选手名
+        self.guess_attempts = 0  # 剩余猜测次数
 
     def _setup_logging(self):
         logging.basicConfig(
@@ -294,329 +296,401 @@ class StableMusicBot:
             await msg.reply(f"离开语音频道失败: {str(e)}")
 
     def _register_handlers(self):
-        # 新增：指令前缀处理函数，使所有指令变为大小写不敏感
-        async def handle_case_insensitive_commands(msg: Message):
+        @self.bot.on_message()
+        async def handle_all_messages(msg: Message):
             content = msg.content.strip()
             if not content.startswith('/'):
+                # 处理猜测逻辑（非指令消息）
+                await self.handle_guess(msg)
                 return
 
-            # 分割指令和参数
+            # 处理指令消息
             parts = content[1:].split(' ', 1)
             command = parts[0].lower()
             args = parts[1] if len(parts) > 1 else ''
 
-            # 根据指令调用对应的处理函数
             if command == 'play':
-                await play_cmd(msg, args)
+                await self.play_cmd(msg, args)
             elif command == 'come':
-                await come_cmd(msg)
+                await self.come_cmd(msg)
             elif command == 'leave':
-                await leave_cmd(msg)
+                await self.leave_cmd(msg)
             elif command == 'help':
-                await help_cmd(msg)
+                await self.help_cmd(msg)
             elif command == 'wiki':
-                await wiki_cmd(msg)
+                await self.wiki_cmd(msg)
             elif command == 'price':
-                await price_cmd(msg)
+                await self.price_cmd(msg)
             elif command == 'sim':
-                await sim_cmd(msg)
+                await self.sim_cmd(msg)
             elif command == 'hq_helper':
-                await precrafts_cmd(msg)
+                await self.precrafts_cmd(msg)
             elif command == 'act_cafe':
-                await act_cafe_cmd(msg)
+                await self.act_cafe_cmd(msg)
             elif command == 'act_diemoe':
-                await act_diemoe_cmd(msg)
+                await self.act_diemoe_cmd(msg)
             elif command == 'idn':
-                await idn_cmd(msg)
+                await self.idn_cmd(msg)
             elif command == 'roll':
-                await roll_cmd(msg)
+                await self.roll_cmd(msg)
             elif command == 'id':
-                await id_cmd(msg)
+                await self.id_cmd(msg)
             elif command == 'guess':
-                await guess_cmd(msg)
+                await self.guess_cmd(msg)
             elif command == 'result':
-                await result_cmd(msg)
+                await self.result_cmd(msg)
 
-        # 注册通用消息处理函数
-        @self.bot.on_message()
-        async def handle_all_messages(msg: Message):
-            await handle_case_insensitive_commands(msg)
+    # 以下所有指令处理函数现在是类的方法，与 _register_handlers 同级
+    async def play_cmd(self, msg: Message, query: str):
+        self.logger.info(f"接收到 /play 指令，参数: {query}")
+        time.sleep(0.5)
+        await self._safe_play(msg, query)
 
-        # 保留原有的指令处理函数，但不再通过装饰器注册
-        async def play_cmd(msg: Message, query: str):
-            self.logger.info(f"接收到 /play 指令，参数: {query}")
-            time.sleep(0.5)
-            await self._safe_play(msg, query)
+    async def come_cmd(self, msg: Message):
+        self.logger.info(f"接收到 /come 指令")
+        await self._join_user_voice_channel(msg)
 
-        async def come_cmd(msg: Message):
-            self.logger.info(f"接收到 /come 指令")
-            await self._join_user_voice_channel(msg)
+    async def leave_cmd(self, msg: Message):
+        await self._leave_voice_channel(msg)
 
-        async def leave_cmd(msg: Message):
-            await self._leave_voice_channel(msg)
+    async def help_cmd(self, msg: Message):
+        await msg.reply(
+            "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t开始猜测选手\n/RESULT:\t显示结果（猜测正确时自动触发）"
+        )
 
-        async def help_cmd(msg: Message):
-            await msg.reply(
-                "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t猜测指令\n/RESULT:\t结果指令"
-            )
+    wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'
+    price_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/4/4a/065002.png'
+    sim_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/b/b9/061543.png'
+    hq_helper_img_src = 'https://raw.githubusercontent.com/InfSein/hqhelper-dawntrail/master/public/icons/logo_v2_shadowed.png'
+    act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/334.png'
+    act_diemoe_imsg_src = 'https://act.diemoe.net/assets/img/logo.png'
 
-        wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'
-        price_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/4/4a/065002.png'
-        sim_image_src = 'https://huiji-public.huijistatic.com/ff14/uploads/b/b9/061543.png'
-        hq_helper_img_src = 'https://raw.githubusercontent.com/InfSein/hqhelper-dawntrail/master/public/icons/logo_v2_shadowed.png'
-        act_cafe_img_src = 'https://www.ffcafe.cn/images/logos/334.png'
-        act_diemoe_imsg_src = 'https://act.diemoe.net/assets/img/logo.png'
-
-        async def wiki_cmd(msg: Message):
-            url = 'https://ff14.huijiwiki.com/wiki/首页?veaction=edit'
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=url, type=Types.Text.KMD)
-                ),
-                Module.Divider(),
-                Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
-                    accessory=Element.Button(
-                        text="跳转",
-                        value=url,
-                        click=Types.Click.LINK,
-                        theme=Types.Theme.PRIMARY
-                    ),
-                    mode=Types.SectionMode.RIGHT
-                ),
-                Module.Section(
-                    accessory=Element.Image(src=wiki_image_src, size=Types.Size.SM),
-                    mode=Types.SectionMode.RIGHT
-                )
-            )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def price_cmd(msg: Message):
-            url = 'https://www.ff14pvp.top/#/'
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=url, type=Types.Text.KMD)
-                ),
-                Module.Divider(),
-                Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
-                    accessory=Element.Button(
-                        text="跳转",
-                        value=url,
-                        click=Types.Click.LINK,
-                        theme=Types.Theme.PRIMARY
-                    ),
-                    mode=Types.SectionMode.RIGHT
-                ),
-                Module.Section(
-                    accessory=Element.Image(src=price_image_src, size=Types.Size.SM),
-                    mode=Types.SectionMode.RIGHT
-                )
-            )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def sim_cmd(msg: Message):
-            url = 'https://tnze.yyyy.games/#/welcome'
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=url, type=Types.Text.KMD)
-                ),
-                Module.Divider(),
-                Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
-                    accessory=Element.Button(
-                        text="跳转",
-                        value=url,
-                        click=Types.Click.LINK,
-                        theme=Types.Theme.PRIMARY
-                    ),
-                    mode=Types.SectionMode.RIGHT
-                ),
-                Module.Section(
-                    accessory=Element.Image(src=sim_image_src, size=Types.Size.SM),
-                    mode=Types.SectionMode.RIGHT
-                )
-            )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def precrafts_cmd(msg: Message):
-            url = 'https://hqhelper.nbb.fan/#/'
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=url, type=Types.Text.KMD)
-                ),
-                Module.Divider(),
-                Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
-                    accessory=Element.Button(
-                        text="跳转",
-                        value=url,
-                        click=Types.Click.LINK,
-                        theme=Types.Theme.PRIMARY
-                    ),
-                    mode=Types.SectionMode.RIGHT
-                ),
-                Module.Section(
-                    accessory=Element.Image(src=hq_helper_img_src, size=Types.Size.SM),
-                    mode=Types.SectionMode.RIGHT
-                )
-            )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def act_cafe_cmd(msg: Message):
-            url = 'https://www.ffcafe.cn/act/'
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=url, type=Types.Text.KMD)
-                ),
-                Module.Divider(),
-                Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
-                    accessory=Element.Button(
-                        text="跳转",
-                        value=url,
-                        click=Types.Click.LINK,
-                        theme=Types.Theme.PRIMARY
-                    ),
-                    mode=Types.SectionMode.RIGHT
-                ),
-                Module.Section(
-                    accessory=Element.Image(src=act_cafe_img_src, size=Types.Size.SM),
-                    mode=Types.SectionMode.RIGHT
-                )
-            )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def act_diemoe_cmd(msg: Message):
-            url = 'https://act.diemoe.net/'
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=url, type=Types.Text.KMD)
-                ),
-                Module.Divider(),
-                Module.Section(
-                    text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
-                    accessory=Element.Button(
-                        text="跳转",
-                        value=url,
-                        click=Types.Click.LINK,
-                        theme=Types.Theme.PRIMARY
-                    ),
-                    mode=Types.SectionMode.RIGHT
-                ),
-                Module.Section(
-                    accessory=Element.Image(src=act_diemoe_imsg_src, size=Types.Size.SM),
-                    mode=Types.SectionMode.RIGHT
-                )
-            )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def idn_cmd(msg: Message):
-            # 创建卡片，设置颜色和主题
-            card = Card(theme=Types.Theme.PRIMARY, size=Types.Size.LG, color=Color(hex_color='#007BFF'))
-            # 添加标题
-            card.append(Module.Header(Element.Text(content="机器人信息", type=Types.Text.PLAIN)))
-            # 添加分隔线
-            card.append(Module.Divider())
-            # 添加机器人名称信息
-            card.append(Module.Section(Element.Text(content=f"**机器人名称：** {self.bot_name}", type=Types.Text.KMD)))
-            # 添加分隔线
-            card.append(Module.Divider())
-            # 添加机器人版本信息
-            card.append(
-                Module.Section(Element.Text(content=f"**机器人版本：** {self.bot_version}", type=Types.Text.KMD)))
-            # 添加分隔线
-            card.append(Module.Divider())
-            # 添加作者信息
-            card.append(Module.Section(Element.Text(content=f"**作者：** {self.author}", type=Types.Text.KMD)))
-            # 添加分隔线（新增内容分隔）
-            card.append(Module.Divider())
-            # 新增 GitHub 地址模块（左边显示完整地址 + 右边按钮）
-            github_url = "https://github.com/ChadQin/KOOK_BOT"  # GitHub 仓库地址
-            card.append(Module.Section(
-                # 左边：显示完整 GitHub 地址（KMD 格式支持超链接）
-                Element.Text(
-                    content=f"**GitHub 地址：** (ins){github_url}(ins)",
-                    type=Types.Text.KMD
-                ),
-                # 右边：绿色按钮（点击打开链接，核心修正点：使用 `value` 而非 `href`）
-                Element.Button(
-                    text="查看仓库",
+    async def wiki_cmd(self, msg: Message):
+        url = 'https://ff14.huijiwiki.com/wiki/首页?veaction=edit'
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=url, type=Types.Text.KMD)
+            ),
+            Module.Divider(),
+            Module.Section(
+                text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
+                accessory=Element.Button(
+                    text="跳转",
+                    value=url,
                     click=Types.Click.LINK,
-                    value=github_url,
-                    theme=Types.Theme.SUCCESS
-                )
-            ))
-
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
-
-        async def roll_cmd(msg: Message):
-            random_num = random.randint(1, 999)
-            channel_id = msg.channel.id
-            user_id = msg.author.id
-            if channel_id not in self.roll_info:
-                self.roll_info[channel_id] = {
-                    'end_time': datetime.datetime.now() + datetime.timedelta(minutes=5),
-                    'results': {},
-                    'total_people': 0
-                }
-            self.roll_info[channel_id]['results'][user_id] = random_num
-            self.roll_info[channel_id]['total_people'] += 1
-            card = Card(
-                Module.Section(
-                    text=Element.Text(content=f"你掷出了: **(font){random_num}(font)[pink]**", type=Types.Text.KMD)
-                )
+                    theme=Types.Theme.PRIMARY
+                ),
+                mode=Types.SectionMode.RIGHT
+            ),
+            Module.Section(
+                accessory=Element.Image(src=self.wiki_image_src, size=Types.Size.SM),
+                mode=Types.SectionMode.RIGHT
             )
-            card_msg = CardMessage(card)
-            await msg.reply(card_msg)
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
 
-        async def id_cmd(msg: Message):
-            sorted_names, player_count = self.player_manager.get_sorted_player_names()
-            if player_count > 0:
-                player_list = "\n".join(sorted_names)
-                reply_msg = f"选手名单（共 {player_count} 人）：\n{player_list}"
-            else:
-                reply_msg = "未找到选手数据。"
-            await msg.reply(reply_msg)
+    async def price_cmd(self, msg: Message):
+        url = 'https://www.ff14pvp.top/#/'
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=url, type=Types.Text.KMD)
+            ),
+            Module.Divider(),
+            Module.Section(
+                text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
+                accessory=Element.Button(
+                    text="跳转",
+                    value=url,
+                    click=Types.Click.LINK,
+                    theme=Types.Theme.PRIMARY
+                ),
+                mode=Types.SectionMode.RIGHT
+            ),
+            Module.Section(
+                accessory=Element.Image(src=self.price_image_src, size=Types.Size.SM),
+                mode=Types.SectionMode.RIGHT
+            )
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
 
-        async def guess_cmd(msg: Message):
-            sorted_names, player_count = self.player_manager.get_sorted_player_names()
-            if player_count > 0:
-                self.guessed_player = random.choice(sorted_names)
-                await msg.reply("已抽取一名选手，输入 /RESULT 查看结果。")
-            else:
-                await msg.reply("未找到选手数据。")
+    async def sim_cmd(self, msg: Message):
+        url = 'https://tnze.yyyy.games/#/welcome'
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=url, type=Types.Text.KMD)
+            ),
+            Module.Divider(),
+            Module.Section(
+                text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
+                accessory=Element.Button(
+                    text="跳转",
+                    value=url,
+                    click=Types.Click.LINK,
+                    theme=Types.Theme.PRIMARY
+                ),
+                mode=Types.SectionMode.RIGHT
+            ),
+            Module.Section(
+                accessory=Element.Image(src=self.sim_image_src, size=Types.Size.SM),
+                mode=Types.SectionMode.RIGHT
+            )
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
 
-        async def result_cmd(msg: Message):
-            if self.guessed_player:
-                player_info = self.player_manager.get_player_info(self.guessed_player)
-                if player_info.startswith("未找到") or player_info.startswith("数据加载失败"):
-                    await msg.reply(player_info)
+    async def precrafts_cmd(self, msg: Message):
+        url = 'https://hqhelper.nbb.fan/#/'
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=url, type=Types.Text.KMD)
+            ),
+            Module.Divider(),
+            Module.Section(
+                text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
+                accessory=Element.Button(
+                    text="跳转",
+                    value=url,
+                    click=Types.Click.LINK,
+                    theme=Types.Theme.PRIMARY
+                ),
+                mode=Types.SectionMode.RIGHT
+            ),
+            Module.Section(
+                accessory=Element.Image(src=self.hq_helper_img_src, size=Types.Size.SM),
+                mode=Types.SectionMode.RIGHT
+            )
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
+
+    async def act_cafe_cmd(self, msg: Message):
+        url = 'https://www.ffcafe.cn/act/'
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=url, type=Types.Text.KMD)
+            ),
+            Module.Divider(),
+            Module.Section(
+                text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
+                accessory=Element.Button(
+                    text="跳转",
+                    value=url,
+                    click=Types.Click.LINK,
+                    theme=Types.Theme.PRIMARY
+                ),
+                mode=Types.SectionMode.RIGHT
+            ),
+            Module.Section(
+                accessory=Element.Image(src=self.act_cafe_img_src, size=Types.Size.SM),
+                mode=Types.SectionMode.RIGHT
+            )
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
+
+    async def act_diemoe_cmd(self, msg: Message):
+        url = 'https://act.diemoe.net/'
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=url, type=Types.Text.KMD)
+            ),
+            Module.Divider(),
+            Module.Section(
+                text=Element.Text(content="点击跳转------------------>", type=Types.Text.KMD),
+                accessory=Element.Button(
+                    text="跳转",
+                    value=url,
+                    click=Types.Click.LINK,
+                    theme=Types.Theme.PRIMARY
+                ),
+                mode=Types.SectionMode.RIGHT
+            ),
+            Module.Section(
+                accessory=Element.Image(src=self.act_diemoe_imsg_src, size=Types.Size.SM),
+                mode=Types.SectionMode.RIGHT
+            )
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
+
+    async def idn_cmd(self, msg: Message):
+        card = Card(theme=Types.Theme.PRIMARY, size=Types.Size.LG, color=Color(hex_color='#007BFF'))
+        card.append(Module.Header(Element.Text(content="机器人信息", type=Types.Text.PLAIN)))
+        card.append(Module.Divider())
+        card.append(Module.Section(Element.Text(content=f"**机器人名称：** {self.bot_name}", type=Types.Text.KMD)))
+        card.append(Module.Divider())
+        card.append(Module.Section(Element.Text(content=f"**机器人版本：** {self.bot_version}", type=Types.Text.KMD)))
+        card.append(Module.Divider())
+        card.append(Module.Section(Element.Text(content=f"**作者：** {self.author}", type=Types.Text.KMD)))
+        card.append(Module.Divider())
+        github_url = "https://github.com/ChadQin/KOOK_BOT"
+        card.append(Module.Section(
+            Element.Text(content=f"**GitHub 地址：** (ins){github_url}(ins)", type=Types.Text.KMD),
+            Element.Button(
+                text="查看仓库",
+                click=Types.Click.LINK,
+                value=github_url,
+                theme=Types.Theme.SUCCESS
+            )
+        ))
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
+
+    async def roll_cmd(self, msg: Message):
+        random_num = random.randint(1, 999)
+        channel_id = msg.channel.id
+        user_id = msg.author.id
+        if channel_id not in self.roll_info:
+            self.roll_info[channel_id] = {
+                'end_time': datetime.datetime.now() + datetime.timedelta(minutes=5),
+                'results': {},
+                'total_people': 0
+            }
+        self.roll_info[channel_id]['results'][user_id] = random_num
+        self.roll_info[channel_id]['total_people'] += 1
+        card = Card(
+            Module.Section(
+                text=Element.Text(content=f"你掷出了: **(font){random_num}(font)[pink]**", type=Types.Text.KMD)
+            )
+        )
+        card_msg = CardMessage(card)
+        await msg.reply(card_msg)
+
+    async def id_cmd(self, msg: Message):
+        sorted_names, player_count = self.player_manager.get_sorted_player_names()
+        if player_count > 0:
+            player_list = "\n".join(sorted_names)
+            reply_msg = f"选手名单（共 {player_count} 人）：\n{player_list}"
+        else:
+            reply_msg = "未找到选手数据。"
+        await msg.reply(reply_msg)
+
+    async def guess_cmd(self, msg: Message):
+        sorted_names, player_count = self.player_manager.get_sorted_player_names()
+        if player_count == 0:
+            await msg.reply("未找到选手数据，无法开始猜测。")
+            return
+
+        self.correct_player = random.choice(sorted_names)
+        self.guess_attempts = 7
+        await msg.reply(f"已抽取一名选手，请猜测他的名字！你有 {self.guess_attempts} 次机会。\n直接发送选手名进行猜测！")
+
+    async def handle_guess(self, msg: Message):
+        if not self.correct_player or self.guess_attempts <= 0:
+            return
+
+        guess = msg.content.strip()
+        player_info = self.player_manager.get_player_info(guess)
+
+        if "未找到" in player_info:
+            await msg.reply("该选手不存在，请重新输入！")
+            return
+
+        # 获取正确选手信息
+        correct_info = self.player_manager.get_player_info(self.correct_player)
+        if "未找到" in correct_info:
+            await msg.reply("内部错误：无法获取正确选手信息")
+            self.correct_player = None
+            self.guess_attempts = 0
+            return
+
+        # 解析正确选手数据
+        correct_data = correct_info.split('\n')[1].split('\t')
+        correct_dict = {
+            "AGE": correct_data[3] if len(correct_data) > 3 else "",
+            "MAJ_NUM": correct_data[5] if len(correct_data) > 5 else ""
+        }
+
+        if guess == self.correct_player:
+            await self.send_correct_result(msg, correct_data)
+            self.correct_player = None
+            self.guess_attempts = 0
+        else:
+            self.guess_attempts -= 1
+            fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
+            data = player_info.split('\n')[1]
+            data_items = data.split('\t')
+            reply_text = ""
+
+            for i, header in enumerate(fixed_headers):
+                if i < len(data_items):
+                    value = data_items[i]
+                    # 对比当前字段与正确选手的对应字段
+                    if i < len(correct_data) and value.strip() == correct_data[i].strip():
+                        value += "✅"  # 完全匹配
+                    # 处理数字比较提示 (AGE和MAJ_NUM)
+                    elif header in ["AGE", "MAJ_NUM"]:
+                        try:
+                            user_value = int(value)
+                            correct_value = int(correct_dict.get(header, 0))
+                            diff = abs(user_value - correct_value)
+                            if diff <= 2:  # 差异在2以内
+                                if user_value > correct_value:
+                                    value += " 🔺"  # 更显眼的向上箭头
+                                elif user_value < correct_value:
+                                    value += " 🔻"  # 更显眼的向下箭头
+                        except ValueError:
+                            pass  # 非数字值不处理
+                    reply_text += f"- {header} :\t{value}\n"
                 else:
-                    # 直接使用固定列头，不再进行拆分操作
-                    fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
-                    # 获取选手数据
-                    data = player_info.split('\n')[1]
-                    data_items = data.split('\t')
+                    reply_text += f"- {header} :\t\n"
 
-                    reply_text = ""
-                    for i, header in enumerate(fixed_headers):
-                        if i < len(data_items):
-                            # 在冒号两端添加制表符 \t
-                            reply_text += f"- {header} :\t{data_items[i]}\n"
-                        else:
-                            reply_text += f"- {header} :\t\n"
-                    await msg.reply(reply_text)
-                self.guessed_player = None
+            if self.guess_attempts > 0:
+                await msg.reply(f"猜测错误！你还有 {self.guess_attempts} 次机会。\n你猜测的选手信息：\n{reply_text}")
             else:
-                await msg.reply("还未进行抽取，请先输入 /GUESS 进行抽取。")
+                # 显示正确答案
+                fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
+                correct_text = ""
+                for i, header in enumerate(fixed_headers):
+                    if i < len(correct_data):
+                        correct_text += f"- {header} :\t{correct_data[i]}✅\n"
+                    else:
+                        correct_text += f"- {header} :\t\n"
+                await msg.reply(f"很遗憾，你的7次机会已用完！正确答案是：\n{correct_text}")
+                self.correct_player = None  # 重置猜测状态
+                self.guess_attempts = 0
+
+    async def send_correct_result(self, msg: Message, correct_data):
+        fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
+        correct_text = ""
+        for i, header in enumerate(fixed_headers):
+            if i < len(correct_data):
+                # 为所有正确信息添加✅
+                correct_text += f"- {header} :\t{correct_data[i]}✅\n"
+            else:
+                correct_text += f"- {header} :\t\n"
+        await msg.reply(f"恭喜你猜中了！正确答案是：\n{correct_text}")
+
+    async def result_cmd(self, msg: Message):
+        if not self.correct_player:
+            await msg.reply("请先通过 /GUESS 开始猜测！")
+            return
+
+        player_info = self.player_manager.get_player_info(self.correct_player)
+        if player_info.startswith("未找到") or player_info.startswith("数据加载失败"):
+            await msg.reply(player_info)
+            self.correct_player = None
+            self.guess_attempts = 0
+            return
+
+        correct_data = player_info.split('\n')[1].split('\t')
+        fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
+        correct_text = ""
+        for i, header in enumerate(fixed_headers):
+            if i < len(correct_data):
+                correct_text += f"- {header} :\t{correct_data[i]}✅\n"
+            else:
+                correct_text += f"- {header} :\t\n"
+
+        if self.guess_attempts > 0:
+            await msg.reply(f"小B崽子，猜不出来叭！正确答案是：\n{correct_text}")
+        else:
+            await msg.reply(f"正确答案是：\n{correct_text}")
+
+        self.correct_player = None
+        self.guess_attempts = 0
 
     async def cleanup(self):
         if self._http and not self._http.closed:

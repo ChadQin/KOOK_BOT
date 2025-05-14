@@ -34,7 +34,9 @@ class HLTVPlayerManager:
             except Exception as e:
                 print(f"错误：读取文件时发生未知错误：{e}")
                 self._player_names = []
-        sorted_names = sorted(self._player_names) if self._player_names else []
+
+        # 修改排序逻辑，使用lower()忽略大小写
+        sorted_names = sorted(self._player_names, key=lambda x: x.lower()) if self._player_names else []
         player_count = len(sorted_names)
         return sorted_names, player_count
 

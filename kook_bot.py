@@ -33,7 +33,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.2"
+        self.bot_version = "V1.2.3"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         self.player_manager = HLTVPlayerManager(r"F:\Python_project\kook_bot_project\data\HLTV_Player.xlsx")
@@ -617,22 +617,30 @@ class StableMusicBot:
             for i, header in enumerate(fixed_headers):
                 if i < len(data_items):
                     value = data_items[i]
-                    # 对比当前字段与正确选手的对应字段
+                    # 处理完全匹配（最高优先级）
                     if i < len(correct_data) and value.strip() == correct_data[i].strip():
-                        value += "✅"  # 完全匹配
+                        value += "✅"
+                    # 处理国籍区域提示（仅当不完全匹配时）
+                    elif header == "NATION" and i < len(correct_data):
+                        correct_nation = correct_data[i].strip()
+                        guess_nation = value.strip()
+                        # 获取两个国家的区域（使用反向映射）
+                        correct_region = self.player_manager.get_country_region(correct_nation)
+                        guess_region = self.player_manager.get_country_region(guess_nation)
+                        # 判断是否属于同一区域（且非完全匹配）
+                        if correct_region and guess_region and correct_region == guess_region and guess_nation != correct_nation:
+                            value += f" (同属{correct_region})"  # 替换为具体区域名称
                     # 处理数字比较提示 (AGE和MAJ_NUM)
                     elif header in ["AGE", "MAJ_NUM"]:
                         try:
                             user_value = int(value)
                             correct_value = int(correct_dict.get(header, 0))
                             diff = abs(user_value - correct_value)
-                            if diff <= 2:  # 差异在2以内
-                                if user_value > correct_value:
-                                    value += " 🔺"  # 更显眼的向上箭头
-                                elif user_value < correct_value:
-                                    value += " 🔻"  # 更显眼的向下箭头
+                            if diff <= 2:
+                                value += " 🔺" if user_value > correct_value else " 🔻"
                         except ValueError:
                             pass  # 非数字值不处理
+                    # 修正：将这一行移到外层if语句下，确保所有字段都被添加到回复中
                     reply_text += f"- {header} :\t{value}\n"
                 else:
                     reply_text += f"- {header} :\t\n"
@@ -640,8 +648,8 @@ class StableMusicBot:
             if self.guess_attempts > 0:
                 await msg.reply(f"猜测错误！你还有 {self.guess_attempts} 次机会。\n你猜测的选手信息：\n{reply_text}")
             else:
-                await self.send_fail_result(msg, correct_data)  # 新增方法调用
-                self.correct_player = None  # 重置猜测状态
+                await self.send_fail_result(msg, correct_data)
+                self.correct_player = None
                 self.guess_attempts = 0
 
     async def send_correct_result(self, msg: Message, correct_data):

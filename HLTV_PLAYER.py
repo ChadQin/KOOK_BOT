@@ -6,6 +6,19 @@ class HLTVPlayerManager:
         self.file_path = file_path
         self._player_names = None
         self._df = None
+        self.nation_dict = {
+            "欧洲": ['德国', '法国', '丹麦', '爱沙尼亚', '北马其顿', '波黑', '波兰', '芬兰', '捷克',
+                     '拉脱维亚', '立陶宛', '罗马尼亚', '挪威', '斯洛伐克', '斯洛文尼亚', '土耳其',
+                     '西班牙', '匈牙利', '英国','瑞典'],
+            "独联体": ['乌克兰', '俄罗斯', '哈萨克斯坦', '白俄罗斯'],
+            "亚大": ['中国', '马来西亚', '澳大利亚', '蒙古', '以色列'],
+            "北美": ['加拿大', '美国'],
+            "南美": ['阿根廷', '巴西', '乌拉圭', '智利'],
+            "非洲": ['南非']
+        }
+        # 生成反向映射：国家→区域（假设一个国家只属于一个区域）
+        self.country_to_region = {country: region for region, countries in self.nation_dict.items() for country in
+                                  countries}
 
     def set_file_path(self, file_path):
         self.file_path = file_path
@@ -65,3 +78,7 @@ class HLTVPlayerManager:
                 return f"未找到选手 '{player_name}' 的信息。"
         else:
             return "数据加载失败，请检查文件路径和文件内容。"
+
+    def get_country_region(self, country):
+        """通过反向映射快速获取国家所属的区域（单个区域，假设一对一映射）"""
+        return self.country_to_region.get(country, None)

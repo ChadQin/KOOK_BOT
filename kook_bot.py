@@ -14,7 +14,7 @@ from khl.card.color import Color
 from typing import Dict, Optional, Union
 from HLTV_PLAYER import HLTVPlayerManager
 
-"""Update Time: 2025/05/14"""
+"""Update Time: 2025/05/16"""
 
 
 class StableMusicBot:
@@ -33,13 +33,14 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.3"
+        self.bot_version = "V1.2.4"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         self.player_manager = HLTVPlayerManager(r"F:\Python_project\kook_bot_project\data\HLTV_Player.xlsx")
         # 新增猜测功能状态
         self.correct_player = None  # 正确选手名
         self.guess_attempts = 0  # 剩余猜测次数
+        self.current_process = None  # 新增：保存FFmpeg进程对象
 
     def _setup_logging(self):
         logging.basicConfig(
@@ -211,10 +212,10 @@ class StableMusicBot:
             # 构建 ffmpeg 命令（音质优化核心参数）
             stream_url = music_data['url']
             ffmpeg_cmd = [
-                'ffmpeg', '-re', '-i', stream_url, '-bufsize', '1024k', '-map', '0:a:0',
+                'ffmpeg', '-re', '-i', stream_url, '-bufsize', '8192k', '-map', '0:a:0',
                 '-acodec', 'libopus',  # 使用高效的 Opus 编码（优于 MP3）
                 '-vbr', 'on',  # 启用可变码率（VBR），复杂段落分配更多码率
-                '-ab', '48k',  # 码率提升至 256kbps（原 48k 过低，提升8倍音质）
+                '-ab', '50k',  # 码率提升至 256kbps（原 48k 过低，提升8倍音质）
                 '-ac', '2',  # 保持立体声（2 通道）
                 '-ar', '48000',  # 保持高采样率（48kHz 专业级音频标准）
                 '-filter:a', 'volume=0.5',  # 音量控制（如需默认音量可移除此参数）
@@ -284,7 +285,22 @@ class StableMusicBot:
                 data = {"channel_id": voice_channel['id']}
                 async with self._http.post(leave_url, json=data) as resp:
                     if resp.status == 200:
+                        # ---------------------- 新增核心逻辑 ----------------------
+                        # 1. 终止FFmpeg播放进程
+                        if self.current_process and self.current_process.poll() is None:
+                            try:
+                                self.logger.info("[离开频道] 尝试终止FFmpeg播放进程")
+                                self.current_process.terminate()  # 优雅终止进程
+                                await asyncio.sleep(0.5)  # 等待进程响应
+                                if self.current_process.poll() is None:
+                                    self.current_process.kill()  # 强制终止（超时未响应时）
+                                self.logger.info("[离开频道] FFmpeg进程已终止")
+                            except Exception as e:
+                                self.logger.error(f"[离开频道] 终止进程失败: {str(e)}")
+                        # 2. 重置播放状态
+                        self.is_playing = False
                         self.current_stream_params = {}  # 清空推流参数
+                        # ---------------------------------------------------------
                         await msg.reply("已离开语音频道")
                     else:
                         await msg.reply(f"离开失败，状态码: {resp.status}")
@@ -751,6 +767,13 @@ class StableMusicBot:
             await self._http.close()
         if hasattr(self.bot, 'client') and hasattr(self.bot.client, 'close'):
             await self.bot.client.close()
+            # 终止可能存在的FFmpeg进程
+        if self.current_process and self.current_process.poll() is None:
+            try:
+                self.current_process.terminate()
+                await asyncio.wait_for(self.current_process.wait(), timeout=5)
+            except Exception:
+                pass
 
 
 async def main():

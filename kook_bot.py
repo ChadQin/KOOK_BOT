@@ -16,6 +16,16 @@ from HLTV_PLAYER import HLTVPlayerManager
 
 """Update Time: 2025/05/16"""
 
+# 修改后的资源路径函数
+def get_resource_path(relative_path):
+    if getattr(sys, 'frozen', False):
+        # EXE运行时的当前目录（同级目录）
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # 开发环境路径
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
 
 class StableMusicBot:
     def __init__(self, token: str):
@@ -33,10 +43,11 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.4"
+        self.bot_version = "V1.2.4.1"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
-        self.player_manager = HLTVPlayerManager(r"F:\Python_project\kook_bot_project\data\HLTV_Player.xlsx")
+        # 修改：Excel 文件路径
+        self.player_manager = HLTVPlayerManager(get_resource_path("data/HLTV_Player.xlsx"))
         # 新增猜测功能状态
         self.correct_player = None  # 正确选手名
         self.guess_attempts = 0  # 剩余猜测次数
@@ -44,7 +55,7 @@ class StableMusicBot:
 
     def _setup_logging(self):
         logging.basicConfig(
-            level=logging.DEBUG,
+            level=logging.INFO,
             format='%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s: %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S',
             handlers=[
@@ -53,6 +64,9 @@ class StableMusicBot:
             ]
         )
         self.logger = logging.getLogger(__name__)
+
+        logging.getLogger('aiohttp').setLevel(logging.WARNING)
+        logging.getLogger('khl').setLevel(logging.WARNING)
 
     def _init_event_loop(self):
         if sys.platform == 'win32':
@@ -589,7 +603,7 @@ class StableMusicBot:
             return
 
         self.correct_player = random.choice(sorted_names)
-        print(self.correct_player)
+        # print(self.correct_player)
         self.guess_attempts = 7
         await msg.reply(f"已抽取一名选手，请猜测他的名字！你有 {self.guess_attempts} 次机会。\n直接发送选手名进行猜测！")
 
@@ -671,7 +685,8 @@ class StableMusicBot:
     async def send_correct_result(self, msg: Message, correct_data):
         fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
         correct_text = "\n".join([f"- {h} :\t{v}✅" for h, v in zip(fixed_headers, correct_data)])
-        self.celebrate_image_path = r'F:\Python_project\kook_bot_project\img\celebrate.png'
+        # 修改：庆祝图片路径
+        self.celebrate_image_path = get_resource_path("img/celebrate.png")
         # 上传庆祝图片
         try:
             img_url = await self.bot.client.create_asset(self.celebrate_image_path)
@@ -699,7 +714,8 @@ class StableMusicBot:
         """猜测次数用尽时发送失败图片和正确答案"""
         fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
         correct_text = "\n".join([f"- {h} :\t{v}✅" for h, v in zip(fixed_headers, correct_data)])
-        self.fail_image_path = r'F:\Python_project\kook_bot_project\img\sad.png'
+        # 修改：失败图片路径
+        self.fail_image_path = get_resource_path("img/sad.png")
         # 上传失败图片（与其他场景逻辑一致）
         try:
             img_url = await self.bot.client.create_asset(self.fail_image_path)
@@ -734,7 +750,8 @@ class StableMusicBot:
         correct_data = player_info.split('\n')[1].split('\t')
         fixed_headers = ["NAME", "TEAM", "NATION", "AGE", "ROLE", "MAJ_NUM"]
         correct_text = "\n".join([f"- {h} :\t{v}✅" for h, v in zip(fixed_headers, correct_data)])
-        self.taunt_image_path = r"F:\Python_project\kook_bot_project\img\taunt.png"
+        # 修改：嘲讽图片路径
+        self.taunt_image_path = get_resource_path("img/taunt.png")
         # 上传图片并获取URL
         try:
             img_url = await self.bot.client.create_asset(self.taunt_image_path)
@@ -779,8 +796,8 @@ class StableMusicBot:
 async def main():
     load_dotenv()
     kook_token = os.getenv("KOOK_TOKEN")
-    print(kook_token)
-    print(f"Loaded KOOK_TOKEN: {kook_token}")
+    # print(kook_token)
+    # print(f"Loaded KOOK_TOKEN: {kook_token}")
     if not kook_token:
         raise ValueError("KOOK_TOKEN not found in .env file")
     bot = StableMusicBot(kook_token)
@@ -801,3 +818,5 @@ if __name__ == "__main__":
         pass
     except Exception as e:
         logging.critical(f"致命错误: {str(e)}", exc_info=True)
+        print(f"错误: {e}")
+        input("按回车键退出...")  # 防止闪退，便于查看错误信息pyinstaller --onefile --add-data "HLTV_PLAYER.py;." --add-data "data;data" --add-data "img;img" --icon="bot_icon.ico" kook_bot.py

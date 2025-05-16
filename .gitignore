@@ -3,3 +3,6 @@ __pycache__/
 *.py[cod]
 venv/
 *.log
+*.ico
+dist/
+build/

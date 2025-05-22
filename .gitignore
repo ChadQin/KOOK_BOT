@@ -6,3 +6,4 @@ venv/
 bot_icon.ico
 dist/
 build/
+*.spec

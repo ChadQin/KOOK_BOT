@@ -43,7 +43,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.4.1"
+        self.bot_version = "V1.2.4.2"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         # 修改：Excel 文件路径
@@ -53,14 +53,16 @@ class StableMusicBot:
         self.guess_attempts = 0  # 剩余猜测次数
         self.current_process = None  # 新增：保存FFmpeg进程对象
 
+        print("当前机器人版本: " + self.bot_version)
+
     def _setup_logging(self):
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.DEBUG,
             format='%(asctime)s.%(msecs)03d [%(levelname)s] %(name)s: %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S',
             handlers=[
                 logging.StreamHandler(),
-                logging.FileHandler('musicbot.log', mode='w', encoding='utf-8')
+                logging.FileHandler('debug.log', mode='w', encoding='utf-8')
             ]
         )
         self.logger = logging.getLogger(__name__)
@@ -104,44 +106,52 @@ class StableMusicBot:
                 "type": 1,
                 "limit": 1
             }
-            self.logger.info(f"[搜索歌曲] 请求 URL: {search_url}, 参数: {search_params}")
             try:
                 async with self._http.get(search_url, params=search_params) as resp:
-                    self.logger.info(f"[搜索歌曲] 响应状态码: {resp.status}")
                     if resp.status != 200:
-                        self.logger.error(f"[搜索歌曲] 失败，状态码: {resp.status}, 响应内容: {await resp.text()}")
-                        continue
+                        raise ValueError(f"搜索接口失败，状态码: {resp.status}")  # 新增：接口层错误
                     data = await resp.json(content_type=None)
-                    self.logger.info(f"[搜索歌曲] 响应内容: {data}")
-                    if data['code'] == 200 and data['result']['songCount'] > 0:
-                        song = data['result']['songs'][0]
-                        song_id = song['id']
-                        url_url = self._api_endpoints[1]
-                        url_params = {
-                            "ids": f"[{song_id}]",
-                            "br": 320000,
-                            "csrf_token": ""
+                    if data['code'] != 200 or data['result']['songCount'] == 0:
+                        raise ValueError("未找到匹配的歌曲")  # 原有逻辑
+
+                    song = data['result']['songs'][0]
+                    song_id = song['id']
+                    url_url = self._api_endpoints[1]
+                    url_params = {
+                        "ids": f"[{song_id}]",
+                        "br": 320000,
+                        "csrf_token": ""
+                    }
+                    async with self._http.post(url_url, data=url_params) as url_resp:
+                        if url_resp.status != 200:
+                            raise ValueError(f"获取播放链接接口失败，状态码: {url_resp.status}")  # 新增：接口层错误
+                        url_data = await url_resp.json(content_type=None)
+
+                        # ---------------------- 新增：内层 code 校验 ----------------------
+                        if not url_data['data'] or len(url_data['data']) == 0:
+                            raise ValueError("无可用播放数据")  # 兜底处理
+
+                        inner_code = url_data['data'][0].get('code', None)
+                        if inner_code == -110:
+                            raise ValueError("歌曲需要付费，暂无法播放")  # 付费/版权限制
+                        elif inner_code in [-202, -204]:
+                            raise ValueError("歌曲不存在或已下架")  # 歌曲无效
+                        elif inner_code != 200:
+                            raise ValueError(f"播放链接错误码: {inner_code}")  # 其他业务错误
+
+                        if url_data['data'][0]['url'] is None:
+                            raise ValueError("无可用播放链接")  # url 为空（如免费歌曲无资源）
+                        # -------------------------------------------------------------
+
+                        return {
+                            'url': url_data['data'][0]['url'],
+                            'title': song['name'],
+                            'artist': song['artists'][0]['name']
                         }
-                        self.logger.info(f"[获取播放链接] 请求 URL: {url_url}, 参数: {url_params}")
-                        try:
-                            async with self._http.post(url_url, data=url_params) as url_resp:
-                                self.logger.info(f"[获取播放链接] 响应状态码: {url_resp.status}")
-                                if url_resp.status != 200:
-                                    self.logger.error(
-                                        f"[获取播放链接] 失败，状态码: {url_resp.status}, 响应内容: {await url_resp.text()}")
-                                    continue
-                                url_data = await url_resp.json(content_type=None)
-                                self.logger.info(f"[获取播放链接] 响应内容: {url_data}")
-                                if url_data['code'] == 200 and url_data['data']:
-                                    return {
-                                        'url': url_data['data'][0]['url'],
-                                        'title': song['name'],
-                                        'artist': song['artists'][0]['name']
-                                    }
-                        except Exception as e:
-                            self.logger.error(f"[获取播放链接] 异常: {str(e)}")
             except Exception as e:
-                self.logger.error(f"[搜索歌曲] 异常: {str(e)}")
+                self.logger.error(f"[搜索/获取链接] 异常: {str(e)}")
+                if retry == 2:  # 重试三次失败后抛出
+                    raise ValueError(str(e))
         raise ValueError("未找到匹配的歌曲")
 
     async def _join_user_voice_channel(self, msg: Message):
@@ -220,25 +230,33 @@ class StableMusicBot:
                     self.is_playing = False
                     return
 
+            # 获取音乐数据（包含精准异常抛出）
             music_data = await self._fetch_music_data(query)
+
+            # 确保播放链接有效（防御性检查）
+            if not music_data.get('url'):
+                raise ValueError("无可用播放链接")
+
             await msg.reply(f"🎵 正在播放: {music_data['title']} - {music_data['artist']}")
 
             # 构建 ffmpeg 命令（音质优化核心参数）
             stream_url = music_data['url']
             ffmpeg_cmd = [
-                'ffmpeg', '-re', '-i', stream_url, '-bufsize', '8192k', '-map', '0:a:0',
-                '-acodec', 'libopus',  # 使用高效的 Opus 编码（优于 MP3）
-                '-vbr', 'on',  # 启用可变码率（VBR），复杂段落分配更多码率
-                '-ab', '50k',  # 码率提升至 256kbps（原 48k 过低，提升8倍音质）
-                '-ac', '2',  # 保持立体声（2 通道）
-                '-ar', '48000',  # 保持高采样率（48kHz 专业级音频标准）
-                '-filter:a', 'volume=0.5',  # 音量控制（如需默认音量可移除此参数）
+                'ffmpeg', '-re', '-i', stream_url,
+                '-bufsize', '8192k', '-map', '0:a:0',
+                '-acodec', 'libopus',  # 使用高效的 Opus 编码
+                '-vbr', 'on',  # 可变码率优化音质
+                '-ab', '50k',  # 提升码率至 50k（原 48k 过低）
+                '-ac', '2',  # 保持立体声
+                '-ar', '48000',  # 专业级采样率
+                '-filter:a', 'volume=0.5',  # 音量控制（可选）
                 '-f', 'tee',
                 f'[select=a:f=rtp:ssrc={self.current_stream_params["audio_ssrc"]}:payload_type={self.current_stream_params["audio_pt"]}]'
                 f'rtp://{self.current_stream_params["ip"]}:{self.current_stream_params["port"]}?rtcpport={self.current_stream_params["rtcp_port"]}'
             ]
             self.logger.info(f"[播放歌曲] ffmpeg 命令: {' '.join(ffmpeg_cmd)}")
 
+            # 执行 FFmpeg 进程
             loop = asyncio.get_running_loop()
             process = await loop.run_in_executor(
                 None,
@@ -256,21 +274,43 @@ class StableMusicBot:
             )
             self.logger.info(f"[播放歌曲] ffmpeg 标准输出: {stdout if stdout else '无'}")
             self.logger.info(f"[播放歌曲] ffmpeg 标准错误: {stderr if stderr else '无'}")
+
             if process.returncode != 0:
                 self.logger.error(f"[播放歌曲] ffmpeg 执行失败，返回码: {process.returncode}")
                 await msg.reply("歌曲播放失败，请检查日志")
             else:
                 self.logger.info("[播放歌曲] ffmpeg 执行成功")
+
             self.is_playing = False
+
         except ValueError as e:
-            await msg.reply(f"❌ 播放失败: {str(e)}")
-            self.logger.error(f"[播放歌曲] 业务错误: {str(e)}")
+            # 精准错误处理（与 _fetch_music_data 抛出的异常匹配）
+            error_msg = str(e)
+            if "歌曲需要付费，暂无法播放" in error_msg:
+                await msg.reply("❌ 歌曲需要付费，暂无法播放")
+            elif "歌曲不存在或已下架" in error_msg:
+                await msg.reply("❌ 歌曲不存在或已下架")
+            elif "无可用播放链接" in error_msg:
+                await msg.reply("❌ 该歌曲暂无免费播放资源")
+            elif "搜索接口失败" in error_msg or "获取播放链接接口失败" in error_msg:
+                await msg.reply("⚠️ 网络请求失败，请稍后重试")
+            else:
+                await msg.reply(f"❌ 播放失败: {error_msg}")
+            self.logger.error(f"[播放歌曲] 业务错误: {error_msg}")
+
         except Exception as e:
+            # 通用系统异常处理
             await msg.reply("⚠️ 系统异常，请稍后重试")
             self.logger.critical(f"[播放歌曲] 系统异常: {str(e)}", exc_info=True)
+
         finally:
-            # 无论播放成功与否，都将播放状态设为False
+            # 确保播放状态重置（防止重复播放）
             self.is_playing = False
+            if self.current_process and self.current_process.poll() is None:
+                try:
+                    self.current_process.terminate()  # 终止可能残留的进程
+                except Exception:
+                    pass
 
     async def _leave_voice_channel(self, msg: Message):
         await self._ensure_http()

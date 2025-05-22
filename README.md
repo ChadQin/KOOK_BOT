@@ -4,7 +4,7 @@
 
 
 ```  
-https://github.com/ChadQin/Device_Control
+https://github.com/ChadQin/KOOK_BOT
 ```  
 
 

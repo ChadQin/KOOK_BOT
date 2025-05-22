@@ -22,4 +22,4 @@ Author:  Chad Qin
 [3]: https://img.shields.io/badge/Contact-blue
 [4]: https://qm.qq.com/cgi-bin/qm/qr?k=LSeZJz-jYQOQpD8tyfdKryTo4jtkIBlN
 [5]: https://img.shields.io/badge/ChangeLog-pink
-[6]: https://qm.qq.com/cgi-bin/qm/qr?k=LSeZJz-jYQOQpD8tyfdKryTo4jtkIBlN
+[6]: https://github.com/ChadQin/KOOK_BOT/blob/master/ChangeLog.md

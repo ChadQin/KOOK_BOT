@@ -27,6 +27,7 @@
 ### 1. 快速升级（普通用户）  
 📥 **下载地址**：  
 [Windows 可执行文件](https://github.com/ChadQin/KOOK_BOT/raw/refs/heads/master/kook_bot.exe)  
+[Windows 可执行文件(国内gitee)](https://gitee.com/chadqin/KOOK_BOT/raw/master/kook_bot.exe)  
 （文件大小：38.3MB，SHA256校验码：`a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c`）  
 
 🔧 **操作步骤**：  

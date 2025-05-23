@@ -43,7 +43,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.4.2"
+        self.bot_version = "V1.2.4.3"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         # 修改：Excel 文件路径
@@ -424,7 +424,7 @@ class StableMusicBot:
 
     async def help_cmd(self, msg: Message):
         await msg.reply(
-            "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t开始猜测选手\n/RESULT:\t显示结果（猜测正确时自动触发）"
+            "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/leave:\t把机器人踢出语音频道\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t开始猜测选手\n/RESULT:\t显示结果（猜测正确时自动触发）"
         )
 
     wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'

@@ -387,7 +387,7 @@ class FF14PriceQuery:
             return "无有效价格数据"
 
         for item in price_data['results']:
-            item_output = [f"物品ID: {item.get('itemId', '未知')}"]
+            item_output = []  # 移除物品ID行
             world_time_map = self._build_world_time_map(item)
 
             # 处理NQ数据
@@ -401,7 +401,7 @@ class FF14PriceQuery:
                 item_output.append("\nNQ:")
                 item_output.extend(nq_items)
 
-            # 处理HQ数据（仅显示完整数据）
+            # 处理HQ数据
             hq_items = self._process_quality_data(
                 item.get('hq', {}),
                 world_time_map,
@@ -412,7 +412,9 @@ class FF14PriceQuery:
                 item_output.append("\nHQ:")
                 item_output.extend(hq_items)
 
-            output.append("\n".join(item_output))
+            # 过滤空的item_output（避免输出空行）
+            if item_output:
+                output.append("\n".join(item_output))
 
         return "\n\n".join(output) if output else "无有效数据"
 

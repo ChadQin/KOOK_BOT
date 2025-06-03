@@ -13,8 +13,9 @@ from khl.card import Card, CardMessage, Module, Element, Types
 from khl.card.color import Color
 from typing import Dict, Optional, Union
 from HLTV_PLAYER import HLTVPlayerManager
+from FF14_Price_Query import FF14PriceQuery
 
-"""Update Time: 2025/05/16"""
+"""Update Time: 2025/06/3"""
 
 # 修改后的资源路径函数
 def get_resource_path(relative_path):
@@ -43,7 +44,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.2.4.3"
+        self.bot_version = "V1.3.0.0"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         # 修改：Excel 文件路径
@@ -52,6 +53,9 @@ class StableMusicBot:
         self.correct_player = None  # 正确选手名
         self.guess_attempts = 0  # 剩余猜测次数
         self.current_process = None  # 新增：保存FFmpeg进程对象
+
+        # 新增：初始化FF14价格查询实例
+        self.ff14_price_query = FF14PriceQuery()
 
         print("当前机器人版本: " + self.bot_version)
 
@@ -408,8 +412,129 @@ class StableMusicBot:
                 await self.guess_cmd(msg)
             elif command == 'result':
                 await self.result_cmd(msg)
+            elif command == 'tax':
+                await self.tax_cmd(msg,args)
+            elif command == 'query':
+                # 确保参数存在且包含空格（服务器名和物品名）
+                if not args or ' ' not in args:
+                    await msg.reply("用法：/query {服务器名} {物品名}\n示例：/query 海猫茶屋 黑星石")
+                    return
+                # 以第一个空格为界，分割服务器名和物品名
+                server_name, item_name = args.split(' ', 1)
+                # 调用查询方法
+                await self.query_cmd(msg, server_name, item_name)
+            elif command == 'sold':
+                if command == 'sold':
+                    params = args.split(' ', 2)
+                    if len(params) < 3:
+                        await msg.reply("用法：/sold {大区名} {物品名} {条目数量}\n示例：/sold 猫小胖 黑星石 5")
+                        return
+                    server, item, count = params[0], params[1], params[2]
+                    if not count.isdigit():
+                        await msg.reply("条目数量必须是数字！")
+                        return
+                    await self.sold_history_cmd(msg, server, item, int(count))
+            elif command == 'market':
+                params = args.split(' ', 1)
+                if len(params) < 2:
+                    await msg.reply("用法：/market {大区名} {物品名}\n示例：/market 猫小胖 黑星石")
+                    return
+                server, item = params[0], params[1]
+                await self.market_cmd(msg, server, item)
+
+    async def market_cmd(self, msg: Message, server_name: str, item_name: str):
+        """查询市场板信息"""
+        self.logger.info(f"查询 {server_name} 大区 {item_name} 的市场板信息")
+
+        market_info = self.ff14_price_query.get_formatted_market_listings(server_name, item_name)
+
+        if not market_info:
+            return await msg.reply("❌ 未找到市场板信息")
+
+        # 处理长消息
+        if len(market_info) > 1900:
+            parts = []
+            current_part = ""
+            for line in market_info.split('\n'):
+                if len(current_part) + len(line) + 1 > 1900:
+                    parts.append(current_part)
+                    current_part = line
+                else:
+                    current_part += '\n' + line if current_part else line
+            if current_part:
+                parts.append(current_part)
+
+            for part in parts:
+                await msg.reply(part)
+        else:
+            await msg.reply(market_info)
+
+
+    async def sold_history_cmd(self, msg: Message, server_name: str, item_name: str, count: int):
+        """查询物品销售历史"""
+        self.logger.info(f"查询 {server_name} 大区 {item_name} 的最近 {count} 条销售记录")
+
+        history = self.ff14_price_query.get_sale_history(server_name, item_name, count)
+
+        if not history:
+            return await msg.reply("❌ 未找到销售历史数据")
+
+        # 处理长消息（超过2000字符时分段发送）
+        if len(history) > 1900:
+            parts = []
+            current_part = ""
+            for line in history.split('\n'):
+                if len(current_part) + len(line) + 1 > 1900:
+                    parts.append(current_part)
+                    current_part = line
+                else:
+                    current_part += '\n' + line if current_part else line
+            if current_part:
+                parts.append(current_part)
+
+            for part in parts:
+                await msg.reply(part)
+        else:
+            await msg.reply(history)
+
+    async def query_cmd(self, msg: Message, server_name: str, item_name: str):
+        """查询FF14物品价格信息"""
+        self.logger.info(f"接收到 /query 指令：服务器={server_name}, 物品={item_name}")
+        # 调用类方法获取结果
+        price_info = self.ff14_price_query.item_query(server_name, item_name)
+        if not price_info:
+            return await msg.reply("❌ 未获取到物品信息")
+            # 处理多行结果，按段落拆分并发送（避免消息过长）
+        lines = price_info.split('\n')
+        current_message = ""
+        for line in lines:
+            if len(current_message) + len(line) + 1 > 2000:  # 避免单条消息超过Kook限制（2000字）
+                await msg.reply(current_message)
+                current_message = line
+            else:
+                current_message = f"{current_message}\n{line}" if current_message else line
+        if current_message:
+            await msg.reply(current_message)
 
     # 以下所有指令处理函数现在是类的方法，与 _register_handlers 同级
+    async def tax_cmd(self, msg: Message, server_name: str):
+        """查询大区税率"""
+        if not server_name:
+            return await msg.reply("用法：/tax {大区名}，例如：/tax 猫小胖")
+
+        tax_rates = self.ff14_price_query.get_market_tax_rates(server_name)
+        if not tax_rates:
+            return await msg.reply("❌ 未找到该大区的税率信息")
+
+        # 格式化输出（中文城市名 + 税率）
+        formatted_rates = []
+        for city_en, rate in tax_rates.items():
+            city_cn = self.ff14_price_query.cities_translate.get(city_en, city_en)
+            formatted_rates.append(f"{city_cn}: {rate:.2f}%")
+
+        await msg.reply(f"📊 {server_name} 大区税率（数据来源：Universalis）：\n" + "\n".join(formatted_rates))
+
+
     async def play_cmd(self, msg: Message, query: str):
         self.logger.info(f"接收到 /play 指令，参数: {query}")
         time.sleep(0.5)
@@ -424,7 +549,7 @@ class StableMusicBot:
 
     async def help_cmd(self, msg: Message):
         await msg.reply(
-            "/help:\t指令帮助\n/idn:\t版本信息\n/play(此处有空格)+歌曲名:\t点歌\n/leave:\t把机器人踢出语音频道\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t开始猜测选手\n/RESULT:\t显示结果（猜测正确时自动触发）"
+            "/help:\t指令帮助\n/idn:\t版本信息\n/play {歌曲名}:\t点歌\n/leave:\t把机器人踢出语音频道\n/wiki:\t查询wiki\n/price:\t查询价格\n/sim:\t生产模拟\n/hq_helper:\t配方查询\n/act_cafe:\t咖啡ACT下载链接\n/act_diemoe:\t呆萌ACT下载链接\n/roll:\t掷骰子（1 - 999）\n/ID:\t查看选手名单\n/GUESS:\t开始猜测选手\n/RESULT:\t显示结果(猜测正确时自动触发)\n/TAX {服务器名称}:\t显示该大区市场税率\n/QUERY {服务器名称} {物品名称}:\t查询物品销售情况\n/SOLD {大区名称} {物品名称} {条目数量}:\t查询物品已售出历史\n/MARKET {大区名称} {物品名称}:\t查询市场板上该物品上架信息"
         )
 
     wiki_image_src = 'https://av.huijiwiki.com/site_avatar_ff14_l.png?1745349668'

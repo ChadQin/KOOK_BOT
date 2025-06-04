@@ -1,88 +1,163 @@
-<!DOCTYPE html><html><head>
-      <title>ChangeLog</title>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      
-      <link rel="stylesheet" href="file:///c:\Users\Administrator\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.18\crossnote\dependencies\katex\katex.min.css">
-      
-      
-      
-      
-      
-      <style>
-      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
-/* Please visit the URL below for more information: */
-/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
-
-      </style>
-      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
-  document.addEventListener("DOMContentLoaded", function () {
-    // your code here
-  });
-</script></head><body for="html-export">
-    
-    
-      <div class="crossnote markdown-preview  ">
-      
-<h1 id="kook_bot-v1243-版本说明">KOOK_BOT v1.2.4.3 版本说明 </h1>
-<p><strong>发布日期</strong>：2025-05-23<br>
-<strong>版本类型</strong>：补丁版本（PATCH）</p>
-<h2 id="一-版本核心变更">一、版本核心变更 </h2>
-<h3 id="1-新增功能">1. 新增功能 </h3>
+<html><head><style>body {
+   color: black;
+}
+</style></head><body><h1 id="kook_bot-v1-3-0-0-">KOOK_BOT v1.3.0.0 版本说明</h1>
+<p><strong>发布日期</strong>：2025-06-04<br><strong>版本类型</strong>：功能版本（FEATURE）</p>
+<h2 id="-">一、版本核心变更</h2>
+<h3 id="1-">1. 新增功能</h3>
 <ul>
-<li><strong>新增把机器人踢出语音频道指令提示</strong><br>
-✅️ /leave：把机器人踢出语音频道</li>
+<li><strong>✅️集成FF14市场数据查询模块</strong><br>通过引入独立类文件 FF14_Price_Query.py，新增四个指令实现游戏内经济系统数据查询:</li>
 </ul>
-<h3 id="2-功能优化">2. 功能优化 </h3>
-<ul>
-<li><strong>歌曲点播错误提示增强</strong><br>
-🛠️ 重构播放异常处理逻辑：
-<ul>
-<li>当歌曲因版权限制（如付费、地区限制）无法播放时，自动返回详细错误信息：<pre data-role="codeBlock" data-info="text" class="language-text text"><code>❌ 歌曲需要付费，暂无法播放。
-
-</code></pre></li>
-</ul>
-</li>
-</ul>
-<h2>二、兼容性说明</h2>
-<h3>1. 系统支持范围</h3>
 <table>
 <thead>
 <tr>
-<th>操作系统</th>
-<th>版本要求</th>
-<th>架构支持</th>
-<th>依赖组件</th>
+<th>指令格式</th>
+<th>功能描述</th>
+<th>关联方法</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Windows</td>
-<td>10/11（64位）</td>
-<td>x86/x64</td>
-<td><code>ffmpeg 5.1+</code>（需手动安装）</td>
+<td>/tax {大区名}</td>
+<td>查询指定大区各城市税率（如利姆萨・罗敏萨、乌尔达哈等）</td>
+<td>get_market_tax_rates()</td>
 </tr>
 <tr>
-<td>Python 开发环境</td>
-<td>≥3.9.0</td>
-<td>-</td>
-<td><code>khl&gt;=0.3.17</code>、<code>pydub&gt;=0.25.1</code></td>
+<td>/query {服务器名} {物品名}</td>
+<td>查询物品当前价格信息（含 NQ/HQ 最低售价、平均售价、日销量）</td>
+<td>item_query()</td>
+</tr>
+<tr>
+<td>/sold {大区名} {物品名} {条目数量}</td>
+<td>查询物品历史销售记录（支持指定返回条数，最多 100 条）</td>
+<td>get_sale_history()</td>
+</tr>
+<tr>
+<td>/market {大区名} {物品名}</td>
+<td>查询市场板实时上架信息（显示普通 / 高品质物品的价格、数量、卖家等详情）</td>
+<td>get_formatted_market_listings()</td>
 </tr>
 </tbody>
 </table>
-<h2>三、升级指南</h2>
-<h3>1. 快速升级（普通用户）</h3>
-<p>📥 <strong>下载地址</strong>：<br>
-<a href="https://github.com/ChadQin/KOOK_BOT/raw/refs/heads/master/kook_bot.exe">Windows 可执行文件</a><br>
-<a href="https://gitee.com/chadqin/KOOK_BOT/raw/master/kook_bot.exe">Windows 可执行文件(国内gitee)</a><br>
-（文件大小：38.3MB，SHA256校验码：<code>a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c</code>）</p>
-<p>🔧 <strong>操作步骤</strong>：</p>
+<p><strong>示例输出</strong>：  </p>
+<pre><code class="lang-text">/query 海猫茶屋 黑星石
+
+NQ:  
+1. 最低售价：742(服务器：摩杜纳, 数据上传时间：2025-06-03 12:19:48)  
+2. 平均售价：957.25  
+HQ:  
+1. 最低售价：788(服务器：静语庄园, 数据上传时间：2025-06-03 01:14:43)
+
+
+/tax 海猫茶屋
+
+📊 海猫茶屋 大区税率（数据来源：Universalis）：
+利姆萨·罗敏萨: 5.00%
+格里达尼亚: 5.00%
+乌尔达哈: 5.00%
+伊修加德: 3.00%
+黄金港: 3.00%
+水晶都: 3.00%
+旧萨雷安: 3.00%
+图莱尤拉: 3.00%
+
+
+/sold 猫小胖 椰奶 5
+
+<span class="hljs-section">==== 椰奶 销售历史（共5条） ====</span>
+
+第1条:
+服务器: 柔风海湾
+品质: NQ
+单价: 400 gil
+数量: 15
+总价: 6,000 gil
+售出时间: 2025-06-04 00:08:09
+买家名称: 汐音
+
+<span class="hljs-bullet">... </span>...
+<span class="hljs-bullet">... </span>...
+
+第5条:
+服务器: 海猫茶屋
+品质: NQ
+单价: 400 gil
+数量: 7
+总价: 2,800 gil
+售出时间: 2025-06-03 23:00:12
+买家名称: 乌拉拉提亚
+
+
+/market 猫小胖 巨匠药酒
+
+【普通品质 (NQ)】前10条:
+
+第1条
+服务器: 琥珀原
+单价: 197 gil
+数量: 1 ×
+雇员: 狗茶兔
+总价: 197 gil
+上架时间: 2025-06-04 01:54:31
+<span class="hljs-bullet">... </span>...
+<span class="hljs-bullet">... </span>...
+第10条
+服务器: 静语庄园
+单价: 400 gil
+数量: 6 ×
+雇员: 姜尚
+总价: 2400 gil
+上架时间: 2025-06-04 09:24:30
+【高品质 (HQ)】前10条:
+
+第1条 ★
+服务器: 延夏
+单价: 600 gil
+数量: 1 ×
+雇员: 克罗涅索
+总价: 600 gil
+上架时间: 2025-06-04 09:18:58
+<span class="hljs-bullet">... </span>...
+<span class="hljs-bullet">... </span>...
+第10条 ★
+服务器: 静语庄园
+单价: 618 gil
+数量: 99 ×
+雇员: ·雅·修特拉
+总价: 61182 gil
+上架时间: 2025-06-04 09:24:30
+</code></pre>
+<h3 id="2-">2. 功能优化</h3>
+<ul>
+<li><strong>指令提示优化</strong><br>🛠️ 指令提示优化：  <ul>
+<li>当输入指令识别符后，机器人回复用法和示例：<br>```text<br>/market
+用法：/market {大区名} {物品名}
+示例：/market 猫小胖 黑星石<h2 id="-">二、兼容性说明</h2>
+<h3 id="1-">1. 新增依赖</h3>
+| 组件名称          | 版本要求         | 用途       |<br>|-------------------|------------------|----------------|
+| requests          | ≥2.26.0     | 调用 Universalis API 获取游戏数据   |
+| python-dateutil       | ≥2.8.2  | 时间戳解析与格式化              |<h3 id="2-">2. 系统影响</h3>
+</li>
+<li>Windows 用户：需确保 ffmpeg 路径已添加到系统环境变量（与原有音乐播放功能共用）  </li>
+<li>开发环境：新增 FF14_Price_Query.py 类文件，需与主程序放置于同目录</li>
+</ul>
+</li>
+</ul>
+<h2 id="-">三、本地部署指南</h2>
+<h3 id="1-">1. 快速升级（普通用户）</h3>
+<p>📥 <strong>下载地址</strong>：<br><a href="https://github.com/ChadQin/KOOK_BOT/raw/refs/heads/master/kook_bot.exe">Windows 可执行文件</a><br><a href="https://gitee.com/chadqin/KOOK_BOT/raw/master/kook_bot.exe">Windows 可执行文件(国内gitee)</a><br>（文件大小：39.6MB，SHA256校验码：<code>a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c</code>）  </p>
+<p>🔧 <strong>操作步骤</strong>：  </p>
 <ol>
-<li>关闭机器人程序（任务栏右键选择“退出”）；</li>
-<li>将下载的 <code>kook_bot.exe</code> 复制到原安装目录（默认路径：<code>C:\kook_bot\</code>），覆盖旧文件；</li>
-<li>双击新文件启动程序，控制台将显示 <code>[INFO] 版本号：v1.2.4.3</code>。</li>
+<li>备份原 FF14_Price_Query.py 文件（如有二次开发）；  </li>
+<li>将下载新版本压缩包，解压后覆盖以下文件：<ul>
+<li>kook_bot.exe（主程序）</li>
+<li>FF14_Price_Query.py（新增类文件）  </li>
+</ul>
+</li>
+<li>双击新文件启动程序，控制台将显示 <code>[INFO] 版本号：v1.3.0.0</code>。</li>
+<li>首次运行会自动拉取游戏物品数据缓存（约需 30 秒）</li>
 </ol>
-<h2>四、贡献者名单</h2>
+<h2 id="-">四、贡献者名单</h2>
 <table>
 <thead>
 <tr>
@@ -101,8 +176,8 @@
 </tr>
 </tbody>
 </table>
-<h2>五、版本规范说明</h2>
-<h3>1. 变更日志符号约定</h3>
+<h2 id="-">五、版本规范说明</h2>
+<h3 id="1-">1. 日志符号约定</h3>
 <table>
 <thead>
 <tr>
@@ -134,8 +209,25 @@
 </tr>
 </tbody>
 </table>
-<h2>六、反馈与支持</h2>
-<h3>1. 问题反馈渠道</h3>
+<h3 id="2-">2. 新增符号约定</h3>
+<table>
+<thead>
+<tr>
+<th>符号</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📚</td>
+<td>文档更新</td>
+<td>📚 新增 FF14 指令使用说明(目前未更新)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="-">六、反馈与支持</h2>
+<h3 id="1-">1. 问题反馈渠道</h3>
 <table>
 <thead>
 <tr>
@@ -161,93 +253,52 @@
 <tr>
 <td>📧 <strong>邮箱</strong></td>
 <td>敏感问题或私密信息</td>
-<td><a href="mailto:qq760533763@outlook.com">qq760533763@outlook.com</a></td>
+<td>qq760533763@outlook.com</td>
 <td>48 小时内</td>
 </tr>
 </tbody>
 </table>
-<h3>2. 贡献代码指南</h3>
-<ol>
-<li><strong>Fork 仓库</strong>：点击 GitHub 页面右上角 "Fork" 按钮；</li>
-<li><strong>创建分支</strong>：基于 <code>develop</code> 分支创建新功能分支（如 <code>feature/new-command</code>）；</li>
-<li><strong>提交 PR</strong>：完成开发后向 <code>develop</code> 分支提交 Pull Request。</li>
-</ol>
-<p>🔍 <strong>代码规范</strong>：</p>
+<h3 id="2-">2. 新增反馈标签</h3>
+<p>在 GitHub Issues 提交反馈时，可添加以下标签：</p>
 <ul>
-<li>使用 PEP 8 代码风格（建议安装 autopep8 自动格式化）；</li>
-<li>新增功能需包含单元测试（测试覆盖率 ≥80%）；</li>
-<li>提交前运行 <code>flake8</code> 检查代码质量。</li>
+<li><code>f14-market</code>：与 FF14 市场查询功能相关的问题</li>
+<li><code>command-parser</code>：指令参数解析异常</li>
 </ul>
-<h3>3. 常见问题（FAQ）</h3>
-<h4>Q1：机器人无法连接 KOOK 服务器？</h4>
-<p>A：检查以下内容：</p>
+<h3 id="3-">3. 贡献代码指南</h3>
 <ol>
-<li>网络连接是否正常；</li>
-<li>Bot Token 是否正确（可在 <a href="https://developer.kookapp.cn">KOOK 开发者后台</a> 重置）；</li>
-<li>防火墙是否放行 443 端口。</li>
+<li><strong>Fork 仓库</strong>：点击 GitHub 页面右上角 &quot;Fork&quot; 按钮；  </li>
+<li><strong>创建分支</strong>：基于 <code>develop</code> 分支创建新功能分支（如 <code>feature/new-command</code>）；  </li>
+<li><strong>提交 PR</strong>：完成开发后向 <code>develop</code> 分支提交 Pull Request。  </li>
 </ol>
-<h3>4. 技术文档与教程</h3>
+<p>🔍 <strong>代码规范</strong>：  </p>
 <ul>
-<li>📚 <strong>官方文档</strong>：<a href="https://developer.kookapp.cn">KOOK_BOT 文档中心</a></li>
-<li>🎬 <strong>视频教程</strong>：<a href="https://www.bilibili.com/">暂无</a></li>
+<li>使用 PEP 8 代码风格（建议安装 autopep8 自动格式化）；  </li>
+<li>新增功能需包含单元测试（测试覆盖率 ≥80%）；  </li>
+<li>提交前运行 <code>flake8</code> 检查代码质量。  </li>
+</ul>
+<h3 id="3-faq-">3. 常见问题（FAQ）</h3>
+<h4 id="q1-kook-">Q1：机器人无法连接 KOOK 服务器？</h4>
+<p>A：检查以下内容：  </p>
+<ol>
+<li>网络连接是否正常；  </li>
+<li>Bot Token 是否正确（可在 <a href="https://developer.kookapp.cn">KOOK 开发者后台</a> 重置）；  </li>
+<li>防火墙是否放行 443 端口。  </li>
+</ol>
+<h3 id="4-">4. 技术文档与教程</h3>
+<ul>
+<li>📚 <strong>官方文档</strong>：<a href="https://developer.kookapp.cn">KOOK_BOT 文档中心</a>  </li>
+<li>🎬 <strong>视频教程</strong>：<a href="https://www.bilibili.com/">暂无</a>  </li>
 <li>📖 <strong>API 参考</strong>：<a href="https://khl-py.eu.org/">API 文档</a></li>
 </ul>
-
-      </div>
-      <div class="md-sidebar-toc">
-<div class="md-toc">
-<details style="padding:0;;padding-left:0px;" open="">
-        <summary class="md-toc-link-wrapper">
-          <a href="#kook_bot-v1243-版本说明" class="md-toc-link"><p>KOOK_BOT v1.2.4.3 版本说明</p>
-</a>
-          </summary>
-        <div>
-          <details style="padding:0;;padding-left:24px;" open="">
-        <summary class="md-toc-link-wrapper">
-          <a href="#一-版本核心变更" class="md-toc-link"><p>一、版本核心变更</p>
-</a>
-          </summary>
-        <div>
-          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
-          <a href="#1-新增功能" class="md-toc-link">
-            <ol>
-<li>新增功能</li>
+<h2 id="-">七、已知问题</h2>
+<ol>
+<li><strong>物品名称匹配问题</strong>：部分繁体中文物品名可能无法正确识别（如 “图莱尤拉炖沼泽鬼鱼” 与 “圖萊尤拉燉沼澤鬼魚”），建议使用游戏内简体中文名查询</li>
+<li><strong>数据延迟</strong>：API 数据不定期通过用户上传更新一次，查询结果可能存在时效性差异</li>
 </ol>
-
-          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
-          <a href="#2-功能优化" class="md-toc-link">
-            <ol start="2">
-<li>功能优化</li>
-</ol>
-
-          </a></div>
-        </div>
-      </details>
-    
-        </div>
-      </details>
-    
-</div>
-</div>
-      <a id="sidebar-toc-btn">≡</a>
-    
-    
-    
-    
-    
-    
-<script>
-
-var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
-sidebarTOCBtn.addEventListener('click', function(event) {
-  event.stopPropagation()
-  if (document.body.hasAttribute('html-show-sidebar-toc')) {
-    document.body.removeAttribute('html-show-sidebar-toc')
-  } else {
-    document.body.setAttribute('html-show-sidebar-toc', true)
-  }
-})
-</script>
-      
-  
-    </body></html>
+<p><strong>后续计划</strong>  </p>
+<ul>
+<li>机器人回复以卡片形式回复，阅读美观，所占空间小(因KOOK卡片消息API调用问题，该计划可能无限期延后)</li>
+<li>支持物品价格波动图表生成（需安装 matplotlib）</li>
+<li>查询时附带物品图片</li>
+</ul>
+</body></html>

@@ -15,7 +15,7 @@ from typing import Dict, Optional, Union
 from HLTV_PLAYER import HLTVPlayerManager
 from FF14_Price_Query import FF14PriceQuery
 
-"""Update Time: 2025/06/3"""
+"""Update Time: 2025/06/03"""
 
 # 修改后的资源路径函数
 def get_resource_path(relative_path):
@@ -520,7 +520,7 @@ class StableMusicBot:
     async def tax_cmd(self, msg: Message, server_name: str):
         """查询大区税率"""
         if not server_name:
-            return await msg.reply("用法：/tax {大区名}，例如：/tax 猫小胖")
+            return await msg.reply("用法：/tax {大区名}，例如：/tax 海猫茶屋")
 
         tax_rates = self.ff14_price_query.get_market_tax_rates(server_name)
         if not tax_rates:

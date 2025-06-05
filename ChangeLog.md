@@ -120,6 +120,7 @@ HQ:
     示例：/market 猫小胖 黑星石
 - **🛠️查询时会显示物品的图片    -V1.3.1.0新增内容**  
 通过API提供的ICO图标的url链接，可以在查询时显示物品的图片  
+
 ![截图](https://raw.githubusercontent.com/ChadQin/KOOK_BOT/master/img/example/item_display.png)
 
 
@@ -146,7 +147,7 @@ HQ:
 2. 将下载新版本压缩包，解压后覆盖以下文件：
    - kook_bot.exe（主程序）
    - FF14_Price_Query.py（新增类文件）  
-3. 双击新文件启动程序，控制台将显示 `[INFO] 版本号：v1.3.0.0`。
+3. 双击新文件启动程序，控制台将显示 `[INFO] 版本号：v1.3.1.0`。
 4. 首次运行会自动拉取游戏物品数据缓存（约需 30 秒）
 
 ## 四、贡献者名单

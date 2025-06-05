@@ -1,6 +1,7 @@
 import requests
 import json
 from datetime import datetime
+from typing import Optional, List
 
 
 class FF14PriceQuery:
@@ -318,7 +319,12 @@ class FF14PriceQuery:
             return "错误：未获取到市场数据"
 
         listings = self.extract_listing_info(market_data, sort_by, ascending)
-        return self.format_listings(listings, nq_count, hq_count)
+        formatted_listings = self.format_listings(listings, nq_count, hq_count)
+
+        # 添加标题行（与销售历史类似的格式）
+        title = f"==== {item} 市场板信息 ===="
+
+        return f"{title}\n\n{formatted_listings}"
 
     def get_item_match_id(self, target_name):
         """精确匹配物品ID"""
@@ -370,27 +376,35 @@ class FF14PriceQuery:
         return self._visualize_price_data(price_data)
 
     def _fetch_price_data(self, server_name, item_id):
-        """内部方法：获取价格数据"""
         url = f"{self.BASE_URL}/aggregated/{server_name}/{item_id}"
         try:
             response = requests.get(url)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            # 关键修改：从 worldUploadTimes 中获取最新的毫秒级时间戳
+            upload_times = [upload['timestamp'] for upload in data.get('worldUploadTimes', [])]
+            data['last_upload_time'] = max(upload_times) if upload_times else 0
+            return data
         except Exception as e:
             print(f"数据获取失败：{str(e)}")
             return None
 
     def _visualize_price_data(self, price_data):
-        """内部方法：可视化价格数据"""
         output = []
         if not price_data or not price_data.get('results'):
             return "无有效价格数据"
 
+        # 关键修改：使用 _format_timestamp 处理毫秒级时间戳
+        last_upload_time = price_data.get('last_upload_time', 0)
+        if last_upload_time:
+            update_time = self._format_timestamp(last_upload_time)
+            output.append(f"数据更新时间：{update_time}")
+
         for item in price_data['results']:
-            item_output = []  # 移除物品ID行
+            item_output = []
             world_time_map = self._build_world_time_map(item)
 
-            # 处理NQ数据
+            # 处理NQ/HQ数据（原逻辑不变）
             nq_items = self._process_quality_data(
                 item.get('nq', {}),
                 world_time_map,
@@ -401,7 +415,6 @@ class FF14PriceQuery:
                 item_output.append("\nNQ:")
                 item_output.extend(nq_items)
 
-            # 处理HQ数据
             hq_items = self._process_quality_data(
                 item.get('hq', {}),
                 world_time_map,
@@ -412,11 +425,51 @@ class FF14PriceQuery:
                 item_output.append("\nHQ:")
                 item_output.extend(hq_items)
 
-            # 过滤空的item_output（避免输出空行）
             if item_output:
                 output.append("\n".join(item_output))
 
         return "\n\n".join(output) if output else "无有效数据"
+
+    def get_item_image_url(self, item_name: str) -> Optional[str]:
+        """
+        通过物品名获取精确匹配的物品图片 URL
+        :param item_name: 物品名称（需精确匹配）
+        :return: 图片 URL 或 None（未找到匹配项）
+        """
+        base_api_url = "https://cafemaker.wakingsands.com/Search"
+        params = {
+            "indexes": "item",
+            "string": item_name
+        }
+
+        try:
+            response = requests.get(base_api_url, params=params)
+            response.raise_for_status()  # 抛出 HTTP 错误
+            data = response.json()
+        except (requests.exceptions.RequestException, ValueError):
+            self.logger.error(f"获取物品图片失败：请求异常，物品名={item_name}")
+            return None
+
+        # 第一步：精确匹配物品名（区分大小写，完全匹配）
+        exact_matches: List[dict] = [
+            item for item in data.get("Results", [])
+            if item.get("Name", "").lower() == item_name.lower()  # 不区分大小写匹配
+        ]
+
+        if not exact_matches:
+            self.logger.info(f"未找到精确匹配的物品：{item_name}")
+            return None
+
+        # 取第一个匹配结果（通常精确匹配只有一个）
+        first_match = exact_matches[0]
+        icon_suffix = first_match.get("Icon")
+
+        if not icon_suffix:
+            self.logger.warning(f"匹配到物品但缺少图标后缀：{item_name}")
+            return None
+
+        # 构建完整图片 URL
+        return f"https://cafemaker.wakingsands.com{icon_suffix}"
 
     def _build_world_time_map(self, item):
         """构建服务器ID到时间的映射"""
@@ -488,6 +541,10 @@ class FF14PriceQuery:
             return "时间格式错误"
 
 
+
+# price_query = FF14PriceQuery()
+# print(price_query.get_item_match_id('黑星石'))
+# print(price_query.get_item_image_url('卡冈图亚革'))
 # ===== 使用指南 =====
 # 1. 导入类
 #    from FF14_Price_Query import FF14PriceQuery

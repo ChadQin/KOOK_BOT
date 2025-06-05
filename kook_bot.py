@@ -9,7 +9,7 @@ import subprocess
 import random
 import datetime
 from khl import Bot, Message
-from khl.card import Card, CardMessage, Module, Element, Types
+from khl.card import Card, CardMessage, Module, Element, Types, Struct
 from khl.card.color import Color
 from typing import Dict, Optional, Union
 from HLTV_PLAYER import HLTVPlayerManager
@@ -44,7 +44,7 @@ class StableMusicBot:
         self.current_stream_params = {}  # 存储推流参数 (audio_ssrc, audio_pt, ip, port, rtcp_port)
         self.is_playing = False  # 新增：用于跟踪歌曲播放状态，防止重复播放
         self.bot_name = "Chad Bot"
-        self.bot_version = "V1.3.0.0"
+        self.bot_version = "V1.3.1.0"
         self.author = "Chad Qin"
         self.roll_info = {}  # 初始化 roll_info 属性
         # 修改：Excel 文件路径
@@ -443,15 +443,26 @@ class StableMusicBot:
                 await self.market_cmd(msg, server, item)
 
     async def market_cmd(self, msg: Message, server_name: str, item_name: str):
-        """查询市场板信息"""
+        """查询市场板信息并添加图片"""
         self.logger.info(f"查询 {server_name} 大区 {item_name} 的市场板信息")
 
+        # 获取物品图片 URL
+        item_image_url = self.ff14_price_query.get_item_image_url(item_name)
+
+        # 获取市场板信息文本（保持原有逻辑）
         market_info = self.ff14_price_query.get_formatted_market_listings(server_name, item_name)
 
         if not market_info:
             return await msg.reply("❌ 未找到市场板信息")
 
-        # 处理长消息
+        # 构建包含图片的卡片消息（与 sold_history_cmd 一致）
+        card = Card()
+        if item_image_url:  # 若存在图片 URL
+            card.append(Module.Container(
+                Element.Image(src=item_image_url, size=Types.Size.LG)  # 大尺寸图片
+            ))
+
+        # 处理长消息（超过2000字符时分段发送）
         if len(market_info) > 1900:
             parts = []
             current_part = ""
@@ -464,20 +475,36 @@ class StableMusicBot:
             if current_part:
                 parts.append(current_part)
 
+            # 先发送图片卡片，再分段发送文本
+            if item_image_url:
+                await msg.reply(CardMessage(card))
             for part in parts:
                 await msg.reply(part)
         else:
+            # 直接发送图片卡片和文本
+            if item_image_url:
+                await msg.reply(CardMessage(card))
             await msg.reply(market_info)
 
-
     async def sold_history_cmd(self, msg: Message, server_name: str, item_name: str, count: int):
-        """查询物品销售历史"""
+        """查询物品销售历史并添加图片"""
         self.logger.info(f"查询 {server_name} 大区 {item_name} 的最近 {count} 条销售记录")
 
+        # 获取物品图片 URL
+        item_image_url = self.ff14_price_query.get_item_image_url(item_name)
+
+        # 获取销售历史文本
         history = self.ff14_price_query.get_sale_history(server_name, item_name, count)
 
         if not history:
             return await msg.reply("❌ 未找到销售历史数据")
+
+        # 构建包含图片的卡片消息
+        card = Card()
+        if item_image_url:  # 若存在图片 URL
+            card.append(Module.Container(
+                Element.Image(src=item_image_url, size=Types.Size.LG)  # 大尺寸图片
+            ))
 
         # 处理长消息（超过2000字符时分段发送）
         if len(history) > 1900:
@@ -492,31 +519,62 @@ class StableMusicBot:
             if current_part:
                 parts.append(current_part)
 
+            # 先发送图片卡片，再分段发送文本
+            if item_image_url:
+                await msg.reply(CardMessage(card))
             for part in parts:
                 await msg.reply(part)
         else:
+            # 直接发送图片卡片和文本
+            if item_image_url:
+                await msg.reply(CardMessage(card))
             await msg.reply(history)
 
     async def query_cmd(self, msg: Message, server_name: str, item_name: str):
-        """查询FF14物品价格信息"""
         self.logger.info(f"接收到 /query 指令：服务器={server_name}, 物品={item_name}")
-        # 调用类方法获取结果
+
+        item_image_url = self.ff14_price_query.get_item_image_url(item_name)
         price_info = self.ff14_price_query.item_query(server_name, item_name)
+
         if not price_info:
             return await msg.reply("❌ 未获取到物品信息")
-            # 处理多行结果，按段落拆分并发送（避免消息过长）
-        lines = price_info.split('\n')
-        current_message = ""
-        for line in lines:
-            if len(current_message) + len(line) + 1 > 2000:  # 避免单条消息超过Kook限制（2000字）
-                await msg.reply(current_message)
-                current_message = line
-            else:
-                current_message = f"{current_message}\n{line}" if current_message else line
-        if current_message:
-            await msg.reply(current_message)
 
-    # 以下所有指令处理函数现在是类的方法，与 _register_handlers 同级
+        # 解析更新时间（假设第一行为"数据更新时间：2025-06-05 12:34:56"）
+        lines = price_info.split('\n')
+        update_time_line = next((line for line in lines if line.startswith("数据更新时间：")), None)
+        # update_time = update_time_line.split("：")[1] if update_time_line else "未知时间"
+
+        # 构造带更新时间的标题
+        title = f"==== {item_name} 市场信息 ===="
+
+        # 拼接标题和内容（跳过已提取的更新时间行）
+        content_lines = [line for line in lines if not line.startswith("数据更新时间：")]
+        new_price_info = f"{title}\n\n" + "\n".join(content_lines)
+
+        # 发送图片和文本（逻辑不变）
+        card = Card()
+        if item_image_url:
+            card.append(Module.Container(Element.Image(src=item_image_url, size=Types.Size.LG)))
+
+        if len(new_price_info) > 1900:
+            # 分段发送逻辑不变
+            parts = []
+            current_part = ""
+            for line in new_price_info.split('\n'):
+                if len(current_part) + len(line) + 1 > 1900:
+                    parts.append(current_part)
+                    current_part = line
+                else:
+                    current_part += '\n' + line if current_part else line
+            if item_image_url:
+                await msg.reply(CardMessage(card))
+            for part in parts:
+                await msg.reply(part)
+        else:
+            if item_image_url:
+                await msg.reply(CardMessage(card))
+            await msg.reply(new_price_info)
+
     async def tax_cmd(self, msg: Message, server_name: str):
         """查询大区税率"""
         if not server_name:

@@ -119,7 +119,8 @@ HQ:
     用法：/market {大区名} {物品名}
     示例：/market 猫小胖 黑星石
 - **🛠️查询时会显示物品的图片    -V1.3.1.0新增内容**  
-<span style="color: yellow;">通过API提供的ICO图标的url链接，可以在查询时显示物品的图片</span>  
+通过API提供的ICO图标的url链接，可以在查询时显示物品的图片  
+![截图](https://raw.githubusercontent.com/ChadQin/KOOK_BOT/master/img/example/item_display.png)
 
 
 ## 二、兼容性说明
